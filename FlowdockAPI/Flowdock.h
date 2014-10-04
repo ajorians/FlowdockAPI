@@ -13,8 +13,8 @@ public:
    Flowdock();
    ~Flowdock();
 
-   bool Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage);
-   bool UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strFilePath);
+   bool Say(const std::string& strOrg, const std::string& strFlow, const std::string& strUserName, const std::string& strPassword, const std::string& strMessage);
+   bool UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strUserName, const std::string& strPassword, const std::string& strFilePath);
 
 protected:
 
