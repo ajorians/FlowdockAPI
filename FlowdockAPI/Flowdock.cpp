@@ -36,19 +36,19 @@ FLOWDOCK_EXTERN int FlowdockFree(FlowdockAPI *api)
    return 0;
 }
 
-FLOWDOCK_EXTERN int FlowdockSay(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrMessage)
+FLOWDOCK_EXTERN int FlowdockSay(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage)
 {
-   std::string strOrg(pstrOrg), strFlow(pstrFlow), strMessage(pstrMessage);
+   std::string strOrg(pstrOrg), strFlow(pstrFlow), strUsername(pstrUsername), strPassword(pstrPassword), strMessage(pstrMessage);
    Flowdock* pFlowdock = (Flowdock*)api;
-   return pFlowdock->Say(strOrg, strFlow, strMessage) ? 1 : 0;
+   return pFlowdock->Say(strOrg, strFlow, strUsername, strPassword, strMessage) ? 1 : 0;
 }
 
-FLOWDOCK_EXTERN int FlowdockUploadFile(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrFilePath)
+FLOWDOCK_EXTERN int FlowdockUploadFile(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrFilePath)
 {
-   std::string strOrg(pstrOrg), strFlow(pstrFlow), strFilePath(pstrFilePath);
+   std::string strOrg(pstrOrg), strFlow(pstrFlow), strUsername(pstrUsername), strPassword(pstrPassword), strFilePath(pstrFilePath);
 
    Flowdock* pFlowdock = (Flowdock*)api;
-   return pFlowdock->UploadFile(strOrg, strFlow, strFilePath) ? 1 : 0;
+   return pFlowdock->UploadFile(strOrg, strFlow, strUsername, strPassword, strFilePath) ? 1 : 0;
 }
 
 Flowdock::Flowdock()
@@ -61,7 +61,7 @@ Flowdock::~Flowdock()
    curl_global_cleanup();
 }
 
-bool Flowdock::Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage)
+bool Flowdock::Say(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword, const std::string& strMessage)
 {
    CURL *curl;
    CURLcode res;
@@ -86,7 +86,8 @@ bool Flowdock::Say(const std::string& strOrg, const std::string& strFlow, const 
 
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "ajclient/0.0.1");
    curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-   curl_easy_setopt(curl, CURLOPT_USERPWD, "ajorians@gmail.com:1Smajjmd");
+   std::string strUserPass = strUsername + ":" + strPassword;
+   curl_easy_setopt(curl, CURLOPT_USERPWD, strUserPass.c_str());
    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -110,7 +111,7 @@ bool Flowdock::Say(const std::string& strOrg, const std::string& strFlow, const 
    return static_cast<int>(http_code) == 200;
 }
 
-bool Flowdock::UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strFilePath)
+bool Flowdock::UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword, const std::string& strFilePath)
 {
    CURL *curl;
    CURLcode res;
@@ -145,7 +146,8 @@ bool Flowdock::UploadFile(const std::string& strOrg, const std::string& strFlow,
 
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "ajclient/0.0.1");
    curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-   curl_easy_setopt(curl, CURLOPT_USERPWD, "ajorians@gmail.com:1Smajjmd");
+   std::string strUserPass = strUsername + ":" + strPassword;
+   curl_easy_setopt(curl, CURLOPT_USERPWD, strUserPass.c_str());
    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
