@@ -92,9 +92,7 @@ Flowdock::Flowdock()
 #endif
    m_bExit(false), m_bListening(false)
 {
-//#ifdef WIN32
    pthread_mutex_init(&m_mutexListen, NULL);
-//#endif
    m_threadListen = pthread_self();
    curl_global_init(CURL_GLOBAL_ALL);
 }

@@ -10,6 +10,7 @@
 
 #ifndef WIN32
 #include <unistd.h>//For usleep
+#include <limits.h>//For PATH_MAX
 #endif
 
 using namespace std;
@@ -49,13 +50,23 @@ int main(int argc, char *argv[])
       return 0;
    }
 
-   RLibrary library(
+   std::string strPath;
 #ifdef WIN32
-      "..\\..\\FlowdockAPI\\Debug\\FlowdockAPI.dll"
+   strPath = "..\\..\\FlowdockAPI\\Debug\\FlowdockAPI.dll"
 #else
-      "/home/ajorians/Documents/git/FlowdockAPI/Build/FlowdockAPI/libFlowdockAPI.so"
+   char path[PATH_MAX] = "/proc/self/exe";
+   char dest[PATH_MAX];
+   readlink(path, dest, PATH_MAX);
+   std::string strEXE(dest);
+   strEXE = strEXE.substr(0, strEXE.rfind('/'));//EXE folder
+   cout << "EXE: " << strEXE << endl;
+   strEXE = strEXE.substr(0, strEXE.rfind('/'));//Build folder
+   cout << "EXE: " << strEXE << endl;
+
+   strPath = strEXE + "/FlowdockAPI/libFlowdockAPI.so";
+
 #endif
-      );
+   RLibrary library(strPath);
 
    if( !library.Load() )
       return 0;
