@@ -8,10 +8,15 @@
 #include <windows.h>
 #endif
 
+#ifndef WIN32
+#include <unistd.h>//For usleep
+#endif
+
 using namespace std;
 
 int main(int argc, char *argv[])
 {
+   bool bListen = false;
    std::string strOrg, strFlow, strUser, strPassword, strUploadFile, strMessage;
    for(int i=0; i<argc; i++)
    {
@@ -33,11 +38,14 @@ int main(int argc, char *argv[])
 
       if( str == "--say" )
          strMessage = argv[i+1];
+
+      if( str == "--listen" )
+         bListen = true;
    }
    if( argc < 2 || strOrg.length() == 0 || strFlow.length() == 0 || strUser.length() == 0 || strPassword.length() == 0 )
    {
       cout << "Usage: " << argv[0] << " --org aj-org --flow main --user ajorians@gmail.com --password abc123" << endl;
-      cout << "--upload file or --say message" << endl;
+      cout << "--upload file or --say message or --listen" << endl;
       return 0;
    }
 
@@ -79,6 +87,32 @@ int main(int argc, char *argv[])
          return 0;
 
       Upload(pFlowdock, strOrg.c_str(), strFlow.c_str(), strUser.c_str(), strPassword.c_str(), strUploadFile.c_str());
+   }
+
+   ///
+
+   if( bListen )
+   {
+      FlowdockAddListenFlowFunc AddListenFlow = (FlowdockAddListenFlowFunc)library.Resolve("FlowdockAddListenFlow");
+      if( !AddListenFlow )
+         return 0;
+
+      AddListenFlow(pFlowdock, "aj-org", "main");
+
+      FlowdockStartListeningFunc StartListening = (FlowdockStartListeningFunc)library.Resolve("FlowdockStartListening");
+      if( !StartListening )
+         return 0;
+
+      StartListening(pFlowdock, strUser.c_str(), strPassword.c_str());
+      //Sleep while it is listening
+      for(int i=0; i<10; i++)
+      {
+#ifdef _WIN32
+         Sleep(1000);//1 second
+#else
+         usleep(1000*1000);
+#endif
+      }
    }
 
    ///
