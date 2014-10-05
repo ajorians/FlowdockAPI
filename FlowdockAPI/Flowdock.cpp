@@ -1,5 +1,6 @@
 #include "Flowdock.h"
 #include "FlowdockAPI.h"
+#include "ListenResponse.h"
 #include <sstream>
 
 #include <fstream>
@@ -89,10 +90,12 @@ Flowdock::Flowdock()
 :
 #ifdef WIN32
    m_mutexListen(PTHREAD_MUTEX_INITIALIZER),
+   m_mutexResponse(PTHREAD_MUTEX_INITIALIZER),
 #endif
    m_bExit(false), m_bListening(false)
 {
    pthread_mutex_init(&m_mutexListen, NULL);
+   pthread_mutex_init(&m_mutexResponse, NULL);
    m_threadListen = pthread_self();
    curl_global_init(CURL_GLOBAL_ALL);
 }
@@ -100,6 +103,12 @@ Flowdock::Flowdock()
 Flowdock::~Flowdock()
 {
    StopListening();
+
+   while(m_apResponses.size())
+   {
+      delete m_apResponses[0];
+      m_apResponses.erase(m_apResponses.begin());
+   }
 
    curl_global_cleanup();
 }
@@ -268,8 +277,7 @@ size_t Flowdock::listen_callback(void *ptr, size_t size, size_t nmemb, void *use
       return 0;
 
    const char* pstr = reinterpret_cast<char*>(ptr);
-   //TODO: Do stuff with pstr
-   cout << "Message: " << pstr << endl;
+   pThis->ReceivedResponse(pstr);
 
    return size * nmemb;
 }
@@ -371,7 +379,16 @@ void Flowdock::ListenWorker()
    }
 }
 
-
+void Flowdock::ReceivedResponse(const std::string& strListenResponse)
+{
+   ListenResponse* pResponse = ListenResponse::Create(strListenResponse);
+   if( pResponse != NULL )
+   {
+      pthread_mutex_lock( &m_mutexResponse );
+      m_apResponses.push_back(pResponse);
+      pthread_mutex_unlock( &m_mutexResponse );
+   }
+}
 
 
 

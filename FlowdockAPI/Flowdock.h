@@ -7,6 +7,8 @@
 #include <curl/curl.h>
 #include "FlowdockAPI.h"
 
+class ListenResponse;
+
 class Flowdock
 {
 public:
@@ -26,6 +28,7 @@ protected:
    static size_t listen_callback(void *ptr, size_t size, size_t nmemb, void *userdata);
    static void* ListenThread(void* ptr);
    void ListenWorker();
+   void ReceivedResponse(const std::string& strListenResponse);
 
 protected:
    pthread_t m_threadListen;
@@ -40,6 +43,9 @@ protected:
       std::string m_strFlow;
    };
    std::vector<OrgFlowPair> m_aListenOrgFlows;
+
+   pthread_mutex_t m_mutexResponse;
+   std::vector<ListenResponse*> m_apResponses;
 };
 
 
