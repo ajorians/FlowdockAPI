@@ -1,6 +1,7 @@
 #include "Flowdock.h"
 #include "FlowdockAPI.h"
 #include "ListenResponse.h"
+#include "UserResponse.h"
 #include <sstream>
 
 #include <fstream>
@@ -51,6 +52,14 @@ FLOWDOCK_EXTERN int FlowdockUploadFile(FlowdockAPI api, const char* pstrOrg, con
 
    Flowdock* pFlowdock = (Flowdock*)api;
    return pFlowdock->UploadFile(strOrg, strFlow, strUsername, strPassword, strFilePath) ? 1 : 0;
+}
+
+FLOWDOCK_EXTERN int FlowdockGetUsers(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword)
+{
+   std::string strOrg(pstrOrg), strFlow(pstrFlow), strUsername(pstrUsername), strPassword(pstrPassword);
+
+   Flowdock* pFlowdock = (Flowdock*)api;
+   return pFlowdock->GetUsers(strOrg, strFlow, strUsername, strPassword) ? 1 : 0;
 }
 
 FLOWDOCK_EXTERN int FlowdockIsListening(FlowdockAPI api)
@@ -204,6 +213,65 @@ bool Flowdock::UploadFile(const std::string& strOrg, const std::string& strFlow,
 
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+   res = curl_easy_perform(curl);
+
+   long http_code = 0;
+   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+   curl_easy_cleanup(curl);
+
+   return static_cast<int>(http_code) == 200;
+}
+
+size_t Flowdock::userList_callback(void *ptr, size_t size, size_t nmemb, void *userdata)
+{
+   Flowdock* pThis = (Flowdock*)userdata;
+   if( pThis->m_bExit )
+      return 0;
+
+   const char* pstr = reinterpret_cast<char*>(ptr);
+   pThis->ListUserResponse(pstr);
+
+   return size * nmemb;
+}
+
+void Flowdock::ListUserResponse(const std::string& strUserResponse)
+{
+   std::vector<User*> arrpUsers;
+   UserResponse::Parse(strUserResponse, arrpUsers);
+
+   for(int i=0; i<arrpUsers.size(); i++)
+      m_apUsers.push_back(arrpUsers[i]);
+}
+
+bool Flowdock::GetUsers(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword)
+{
+   CURL *curl;
+   CURLcode res;
+
+   curl = curl_easy_init();
+   if( !curl )
+      return false;
+
+   std::string strURL = "https://api.flowdock.com/flows/";
+   strURL += strOrg;
+   strURL += "/";
+   strURL += strFlow;
+   strURL += "/users";
+   curl_easy_setopt(curl, CURLOPT_URL, strURL.c_str());
+
+   curl_easy_setopt(curl, CURLOPT_USERAGENT, "ajclient/0.0.1");
+   curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+   std::string strUserPass = strUsername + ":" + strPassword;
+   curl_easy_setopt(curl, CURLOPT_USERPWD, strUserPass.c_str());
+   curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+
+   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, userList_callback);
+   curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)this);
 
    res = curl_easy_perform(curl);
 

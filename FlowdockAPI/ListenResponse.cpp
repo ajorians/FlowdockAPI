@@ -11,7 +11,7 @@ std::string WideToNarrow(const std::wstring& w)
 }
 
 ListenResponse::ListenResponse(ListenEvent eEvent, const std::vector<std::string>& astrTags, const std::string& strUUID, double dID,
-                  const std::string& strFlow, const std::string& strContent, double dSent, const std::string& strApp,
+                  const std::string& strFlow, const std::string& strContent, time_t timeSent, const std::string& strApp,
                   const std::vector<std::string>& astrAttachments, double dUser)
 : m_eEvent(eEvent),
 m_astrTags(astrTags),
@@ -19,7 +19,7 @@ m_strUUID(strUUID),
 m_dID(dID),
 m_strFlow(strFlow),
 m_strContent(strContent),
-m_dSent(dSent),
+m_timeSent(timeSent),
 m_strApp(strApp),
 m_astrAttachments(astrAttachments),
 m_dUser(dUser)
@@ -28,6 +28,7 @@ m_dUser(dUser)
 
 ListenResponse* ListenResponse::Create(const std::string& strMessage)
 {
+   cout << "Received response: " << strMessage << endl;
    JSONValue *value = JSON::Parse(strMessage.c_str());
    if( value == NULL )
       return NULL;
@@ -90,6 +91,9 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
 
    double dSent = root[L"sent"]->AsNumber();
 
+   double dSecondsSinceEpoch = dSent/1000;
+   time_t timeSent = dSecondsSinceEpoch;
+
    //App
    if( root.find(L"app") == root.end() || !root[L"app"]->IsString() )
       return NULL;
@@ -113,7 +117,7 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
       dID,
       strFlow,
       std::string(),//Content
-      dSent,
+      timeSent,
       strApp,
       std::vector<std::string>(),//Attachments
       dUser);

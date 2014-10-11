@@ -17,7 +17,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-   bool bListen = false;
+   bool bListen = false, bGetUsers;
    std::string strOrg, strFlow, strUser, strPassword, strUploadFile, strMessage;
    for(int i=0; i<argc; i++)
    {
@@ -39,6 +39,9 @@ int main(int argc, char *argv[])
 
       if( str == "--say" )
          strMessage = argv[i+1];
+
+      if( str == "--getusers" )
+         bGetUsers = true;
 
       if( str == "--listen" )
          bListen = true;
@@ -102,6 +105,17 @@ int main(int argc, char *argv[])
 
    ///
 
+   if( bGetUsers )
+   {
+      FlowdockGetUsersFunc GetUsers = (FlowdockGetUsersFunc)library.Resolve("FlowdockGetUsers");
+      if( !GetUsers )
+         return 0;
+
+      GetUsers(pFlowdock, strOrg.c_str(), strFlow.c_str(), strUser.c_str(), strPassword.c_str());
+   }
+
+   ///
+
    if( bListen )
    {
       FlowdockAddListenFlowFunc AddListenFlow = (FlowdockAddListenFlowFunc)library.Resolve("FlowdockAddListenFlow");
@@ -116,7 +130,8 @@ int main(int argc, char *argv[])
 
       StartListening(pFlowdock, strUser.c_str(), strPassword.c_str());
       //Sleep while it is listening
-      for(int i=0; i<10; i++)
+      while(true)
+      //for(int i=0; i<10; i++)
       {
 #ifdef _WIN32
          Sleep(1000);//1 second
