@@ -8,6 +8,7 @@
 #include "FlowdockAPI.h"
 
 class ListenResponse;
+class User;
 
 class Flowdock
 {
@@ -17,6 +18,7 @@ public:
 
    bool Say(const std::string& strOrg, const std::string& strFlow, const std::string& strUserName, const std::string& strPassword, const std::string& strMessage);
    bool UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strUserName, const std::string& strPassword, const std::string& strFilePath);
+   bool GetUsers(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword);
 
    bool IsListening();
    bool StopListening();
@@ -25,6 +27,9 @@ public:
    bool StartListening(const std::string& strUserName, const std::string& strPassword);
 
 protected:
+   static size_t userList_callback(void *ptr, size_t size, size_t nmemb, void *userdata);
+   void ListUserResponse(const std::string& strUserResponse);
+
    static size_t listen_callback(void *ptr, size_t size, size_t nmemb, void *userdata);
    static void* ListenThread(void* ptr);
    void ListenWorker();
@@ -46,6 +51,8 @@ protected:
 
    pthread_mutex_t m_mutexResponse;
    std::vector<ListenResponse*> m_apResponses;
+
+   std::vector<User*> m_apUsers;
 };
 
 

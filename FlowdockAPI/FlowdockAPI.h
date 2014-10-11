@@ -13,6 +13,7 @@ typedef int (*FlowdockCreateFunc)(FlowdockAPI* api);
 typedef int (*FlowdockFreeFunc)(FlowdockAPI* api);
 typedef int (*FlowdockSayFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage);
 typedef int (*FlowdockUploadFileFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrFilePath);
+typedef int (*FlowdockGetUsersFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword);
 
 typedef int (*FlowdockIsListeningFunc)(FlowdockAPI api);
 typedef int (*FlowdockStopListeningFunc)(FlowdockAPI api);
@@ -24,6 +25,7 @@ FLOWDOCK_EXTERN int FlowdockCreate(FlowdockAPI* api);
 FLOWDOCK_EXTERN int FlowdockFree(FlowdockAPI* api);
 FLOWDOCK_EXTERN int FlowdockSay(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage);
 FLOWDOCK_EXTERN int FlowdockUploadFile(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrFilePath);
+FLOWDOCK_EXTERN int FlowdockGetUsers(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword);
 
 FLOWDOCK_EXTERN int FlowdockIsListening(FlowdockAPI api);
 FLOWDOCK_EXTERN int FlowdockStopListening(FlowdockAPI api);//Can be a tad slow; timeout is currently 60 seconds

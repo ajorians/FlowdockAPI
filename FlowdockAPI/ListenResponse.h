@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <ctime>//Maybe time.h
 
 enum ListenEvent
 {
@@ -17,7 +18,7 @@ public:
 
 protected:
    ListenResponse(ListenEvent eEvent, const std::vector<std::string>& astrTags, const std::string& strUUID, double dID,
-                  const std::string& strFlow, const std::string& strContent, double dSent, const std::string& strApp,
+                  const std::string& strFlow, const std::string& strContent, time_t timeSent, const std::string& strApp,
                   const std::vector<std::string>& astrAttachments, double dUser);
 
 protected:
@@ -28,7 +29,7 @@ protected:
    double m_dID;
    std::string m_strFlow;
    std::string m_strContent;//Could be vector?
-   double m_dSent;//This is a timestamp; TODO: convert it
+   time_t m_timeSent;
    std::string m_strApp;
    std::vector<std::string> m_astrAttachments;
    double m_dUser;
