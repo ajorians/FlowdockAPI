@@ -17,7 +17,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-   bool bListen = false, bGetUsers;
+   bool bListen = false, bGetUsers = false;
    std::string strOrg, strFlow, strUser, strPassword, strUploadFile, strMessage;
    for(int i=0; i<argc; i++)
    {
