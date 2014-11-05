@@ -17,7 +17,8 @@ namespace
 void UserResponse::Parse(const std::string& strMessage, std::vector<User*>& arrpUsers)
 {
    cout << "User response: " << strMessage << endl;
-   std::vector<User> arrUsers;
+   return;
+   /*std::vector<User> arrUsers;
    JSONValue *value = JSON::Parse(strMessage.c_str());
    if( value == NULL )
    {
@@ -36,5 +37,5 @@ void UserResponse::Parse(const std::string& strMessage, std::vector<User*>& arrp
       User* pUser = User::Create(strUser);
       if( pUser )
          arrpUsers.push_back(pUser);
-   }
+   }*/
 }

@@ -29,98 +29,99 @@ m_dUser(dUser)
 ListenResponse* ListenResponse::Create(const std::string& strMessage)
 {
    cout << "Received response: " << strMessage << endl;
-   JSONValue *value = JSON::Parse(strMessage.c_str());
-   if( value == NULL )
-      return NULL;
+   return NULL;
+   //JSONValue *value = JSON::Parse(strMessage.c_str());
+   //if( value == NULL )
+   //   return NULL;
 
-   if( value->IsObject() == false )
-      return NULL;
+   //if( value->IsObject() == false )
+   //   return NULL;
 
-   JSONObject root;
-   root = value->AsObject();
+   //JSONObject root;
+   //root = value->AsObject();
 
-   //Event
-   if( root.find(L"event") == root.end() || !root[L"event"]->IsString() )
-      return NULL;
-   
-   std::string strEvent = WideToNarrow(root[L"event"]->AsString());
-   cout << "StrEvent: " << strEvent << endl;
-   ListenEvent eEvent = Message;
-   if( strEvent == "activity.user" )
-      eEvent = Activity_User;
+   ////Event
+   //if( root.find(L"event") == root.end() || !root[L"event"]->IsString() )
+   //   return NULL;
+   //
+   //std::string strEvent = WideToNarrow(root[L"event"]->AsString());
+   //cout << "StrEvent: " << strEvent << endl;
+   //ListenEvent eEvent = Message;
+   //if( strEvent == "activity.user" )
+   //   eEvent = Activity_User;
 
-   //Tags
-   if( root.find(L"tags") == root.end() || !root[L"tags"]->IsArray() )
-      return NULL;
+   ////Tags
+   //if( root.find(L"tags") == root.end() || !root[L"tags"]->IsArray() )
+   //   return NULL;
 
-   std::vector<std::string> astrTags;
-   JSONArray aTags = root[L"tags"]->AsArray();
-   for(unsigned int i=0; i<aTags.size(); i++)
-   {
-      std::string strTag = WideToNarrow(aTags[i]->Stringify());
-      cout << "Tag: " << strTag << endl;
-      astrTags.push_back(strTag);
-   }
+   //std::vector<std::string> astrTags;
+   //JSONArray aTags = root[L"tags"]->AsArray();
+   //for(unsigned int i=0; i<aTags.size(); i++)
+   //{
+   //   std::string strTag = WideToNarrow(aTags[i]->Stringify());
+   //   cout << "Tag: " << strTag << endl;
+   //   astrTags.push_back(strTag);
+   //}
 
-   //UUID
-   if( root.find(L"uuid") == root.end() || !root[L"uuid"]->IsString() )
-      return NULL;
+   ////UUID
+   //if( root.find(L"uuid") == root.end() || !root[L"uuid"]->IsString() )
+   //   return NULL;
 
-   std::string strUUID = WideToNarrow(root[L"uuid"]->AsString());
-   cout << "UUID: " << strUUID << endl;
+   //std::string strUUID = WideToNarrow(root[L"uuid"]->AsString());
+   //cout << "UUID: " << strUUID << endl;
 
-   //Persist
+   ////Persist
 
-   //ID
-   if( root.find(L"id") == root.end() || !root[L"id"]->IsNumber() )
-      return NULL;
+   ////ID
+   //if( root.find(L"id") == root.end() || !root[L"id"]->IsNumber() )
+   //   return NULL;
 
-   double dID = root[L"id"]->AsNumber();
+   //double dID = root[L"id"]->AsNumber();
 
-   //Flow
-   if( root.find(L"flow") == root.end() || !root[L"flow"]->IsString() )
-      return NULL;
+   ////Flow
+   //if( root.find(L"flow") == root.end() || !root[L"flow"]->IsString() )
+   //   return NULL;
 
-   std::string strFlow = WideToNarrow(root[L"flow"]->AsString());
+   //std::string strFlow = WideToNarrow(root[L"flow"]->AsString());
 
-   //Content
+   ////Content
 
-   //Sent
-   if( root.find(L"sent") == root.end() || !root[L"sent"]->IsNumber() )
-      return NULL;
+   ////Sent
+   //if( root.find(L"sent") == root.end() || !root[L"sent"]->IsNumber() )
+   //   return NULL;
 
-   double dSent = root[L"sent"]->AsNumber();
+   //double dSent = root[L"sent"]->AsNumber();
 
-   double dSecondsSinceEpoch = dSent/1000;
-   time_t timeSent = dSecondsSinceEpoch;
+   //double dSecondsSinceEpoch = dSent/1000;
+   //time_t timeSent = dSecondsSinceEpoch;
 
-   //App
-   if( root.find(L"app") == root.end() || !root[L"app"]->IsString() )
-      return NULL;
+   ////App
+   //if( root.find(L"app") == root.end() || !root[L"app"]->IsString() )
+   //   return NULL;
 
-   std::string strApp = WideToNarrow(root[L"app"]->AsString());
+   //std::string strApp = WideToNarrow(root[L"app"]->AsString());
 
-   //Attachments
+   ////Attachments
 
-   //User
-   if( root.find(L"user") == root.end() || !root[L"user"]->IsNumber() )
-      return NULL;
+   ////User
+   //if( root.find(L"user") == root.end() || !root[L"user"]->IsNumber() )
+   //   return NULL;
 
-   double dUser = root[L"user"]->AsNumber();
+   //double dUser = root[L"user"]->AsNumber();
 
-   delete(value);
+   //delete(value);
 
-   ListenResponse* pResponse = new ListenResponse(
-      eEvent,
-      astrTags,
-      strUUID,
-      dID,
-      strFlow,
-      std::string(),//Content
-      timeSent,
-      strApp,
-      std::vector<std::string>(),//Attachments
-      dUser);
+   //ListenResponse* pResponse = new ListenResponse(
+   //   eEvent,
+   //   astrTags,
+   //   strUUID,
+   //   dID,
+   //   strFlow,
+   //   std::string(),//Content
+   //   timeSent,
+   //   strApp,
+   //   std::vector<std::string>(),//Attachments
+   //   dUser);
 
-   return pResponse;
+   //return pResponse;
 }
