@@ -424,6 +424,12 @@ bool Flowdock::GetNicknameForUser(const std::string& strUser, std::string& strNi
    return false;
 }
 
+int Flowdock::listen_progress(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)
+{
+   Flowdock* pThis = (Flowdock*)clientp;
+   return pThis->m_bExit ? 1 : 0;
+}
+
 size_t Flowdock::listen_callback(void *ptr, size_t size, size_t nmemb, void *userdata)
 {
    //Note: even though this is a callback it was setup from the worker thread.  Be careful about calling certain member
@@ -507,13 +513,15 @@ void Flowdock::ListenWorker()
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 
+      curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, listen_progress);
+      curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, (void*)this);
+      curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, listen_callback);
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)this);
 
-      curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60/*seconds*/);
-
       res = curl_easy_perform(curl);
-      if( res == CURLE_OPERATION_TIMEDOUT )
+      if( res == CURLE_ABORTED_BY_CALLBACK )
       {
       }
       else if( res != 0 )

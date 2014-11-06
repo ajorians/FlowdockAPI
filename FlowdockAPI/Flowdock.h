@@ -35,6 +35,7 @@ public:
    bool GetNicknameForUser(const std::string& strUser, std::string& strNickname) const;
 
 protected:
+   static int listen_progress(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow);
    static size_t listen_callback(void *ptr, size_t size, size_t nmemb, void *userdata);
    static void* ListenThread(void* ptr);
    void ListenWorker();
