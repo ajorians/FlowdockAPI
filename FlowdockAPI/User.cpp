@@ -28,7 +28,6 @@ User::~User()
 
 User* User::Create(const std::string& strMessage)
 {
-   cout << "User: " << strMessage << endl;
    JSON *value = JSON::Parse(strMessage.c_str());
    if( value == NULL )
       return NULL;
@@ -36,7 +35,7 @@ User* User::Create(const std::string& strMessage)
    if( value->IsObject() == false )
       return NULL;
 
-   JSONObjects root;
+   JSONObjects root;//TODO: Make const&; didn't do that now because have to change ["id"] to at("id)
    root = value->AsObject();
 
    //ID
@@ -70,10 +69,10 @@ User* User::Create(const std::string& strMessage)
    std::string strName = root["name"]->AsString();
 
    //Website
-   if( root.find("website") == root.end() || !root["website"]->IsString() )
-      return NULL;
-
-   std::string strWebsite = root["website"]->AsString();
+   std::string strWebsite;
+   if( root.find("website") != root.end() && root["website"]->IsString() ) {
+      strWebsite = root["website"]->AsString();
+   }
 
    //Disabled
    if( root.find("disabled") == root.end() || !root["disabled"]->IsBool() )

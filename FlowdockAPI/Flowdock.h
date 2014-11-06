@@ -26,6 +26,11 @@ public:
    bool RemoveListenFlow(const std::string& strOrg, const std::string& strFlow);
    bool StartListening(const std::string& strUserName, const std::string& strPassword);
 
+   int GetListenMessagesCount() const;
+   int GetListenMessageType(int nIndex) const;
+   std::string GetListenMessageContent(int nIndex) const;
+   bool RemoveListenMessage(int nIndex);
+
 protected:
    static size_t listen_callback(void *ptr, size_t size, size_t nmemb, void *userdata);
    static void* ListenThread(void* ptr);
@@ -46,7 +51,7 @@ protected:
    };
    std::vector<OrgFlowPair> m_aListenOrgFlows;
 
-   pthread_mutex_t m_mutexResponse;
+   mutable pthread_mutex_t m_mutexResponse;
    std::vector<ListenResponse*> m_apResponses;
 
    std::vector<User*> m_apUsers;

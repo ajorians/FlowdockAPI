@@ -97,6 +97,41 @@ FLOWDOCK_EXTERN int FlowdockStartListening(FlowdockAPI api, const char* pstrUser
    return pFlowdock->StartListening(strUsername, strPassword) ? 1 : 0;
 }
 
+FLOWDOCK_EXTERN int FlowdockGetListenMessageCount(FlowdockAPI api)
+{
+   Flowdock* pFlowdock = (Flowdock*)api;
+   return pFlowdock->GetListenMessagesCount();
+}
+
+FLOWDOCK_EXTERN int FlowdockGetListenMessageType(FlowdockAPI api, int nIndex)
+{
+   Flowdock* pFlowdock = (Flowdock*)api;
+   return pFlowdock->GetListenMessageType(nIndex);
+}
+
+FLOWDOCK_EXTERN int FlowdockGetMessageContent(FlowdockAPI api, int nIndex, char* pstrMessage, int& nSizeOfMessage)
+{
+   Flowdock* pFlowdock = (Flowdock*)api;
+
+   std::string strMessageContent = pFlowdock->GetListenMessageContent(nIndex);
+   if( nSizeOfMessage > 0 )
+   {
+      memcpy(pstrMessage, strMessageContent.c_str(), nSizeOfMessage + 1);
+   }
+   else
+   {
+      nSizeOfMessage = strMessageContent.size();
+   }
+
+   return strMessageContent.size()>0 ? 1 : 0;
+}
+
+FLOWDOCK_EXTERN int FlowdockRemoveListenMessage(FlowdockAPI api, int nIndex)
+{
+   Flowdock* pFlowdock = (Flowdock*)api;
+   return pFlowdock->RemoveListenMessage(nIndex) ? 1 : 0;
+}
+
 Flowdock::Flowdock()
 :
 #ifdef WIN32
@@ -225,21 +260,11 @@ bool Flowdock::UploadFile(const std::string& strOrg, const std::string& strFlow,
 
    return static_cast<int>(http_code) == 200;
 }
-//
-//void Flowdock::ListUserResponse(const std::string& strUserResponse)
-//{
-//   std::vector<User*> arrpUsers;
-//   UserResponse::Parse(strUserResponse, arrpUsers);
-//
-//   for(int i=0; i<arrpUsers.size(); i++)
-//      m_apUsers.push_back(arrpUsers[i]);
-//}
 
 bool Flowdock::GetUsers(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword)
 {
    FlowdockUserList UserListRetriever(strOrg, strFlow, strUsername, strPassword);
-   UserListRetriever.GetUsers(m_apUsers);
-   return true;
+   return UserListRetriever.GetUsers(m_apUsers);
 }
 
 bool Flowdock::IsListening()
@@ -291,6 +316,45 @@ bool Flowdock::StartListening(const std::string& strUserName, const std::string&
    m_strListenPassword = strPassword;
 
    int iRet = pthread_create( &m_threadListen, NULL, Flowdock::ListenThread, (void*)this);
+   return true;
+}
+
+int Flowdock::GetListenMessagesCount() const
+{
+   int nCount = 0;
+   pthread_mutex_lock( &m_mutexResponse );
+   nCount = m_apResponses.size();
+   pthread_mutex_unlock( &m_mutexResponse );
+   return nCount;
+}
+
+int Flowdock::GetListenMessageType(int nIndex) const
+{
+   int nRet = -1;
+   pthread_mutex_lock( &m_mutexResponse );
+   assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
+   ListenResponse* pResponse = m_apResponses[nIndex];
+   nRet = pResponse->GetEvent();
+   pthread_mutex_unlock( &m_mutexResponse );
+   return nRet;
+}
+
+std::string Flowdock::GetListenMessageContent(int nIndex) const
+{
+   std::string strRet;
+   pthread_mutex_lock( &m_mutexResponse );
+   assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
+   ListenResponse* pResponse = m_apResponses[nIndex];
+   strRet = pResponse->GetContent();
+   pthread_mutex_unlock( &m_mutexResponse );
+   return strRet;
+}
+
+bool Flowdock::RemoveListenMessage(int nIndex)
+{
+   pthread_mutex_lock( &m_mutexResponse );
+   m_apResponses.erase(m_apResponses.begin()+nIndex);
+   pthread_mutex_unlock( &m_mutexResponse );
    return true;
 }
 
