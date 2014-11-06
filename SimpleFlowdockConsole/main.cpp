@@ -62,9 +62,7 @@ int main(int argc, char *argv[])
    readlink(path, dest, PATH_MAX);
    std::string strEXE(dest);
    strEXE = strEXE.substr(0, strEXE.rfind('/'));//EXE folder
-   cout << "EXE: " << strEXE << endl;
    strEXE = strEXE.substr(0, strEXE.rfind('/'));//Build folder
-   cout << "EXE: " << strEXE << endl;
 
    strPath = strEXE + "/FlowdockAPI/libFlowdockAPI.so";
 
@@ -122,7 +120,7 @@ int main(int argc, char *argv[])
       if( !AddListenFlow )
          return 0;
 
-      AddListenFlow(pFlowdock, "aj-org", "main");
+      AddListenFlow(pFlowdock, strOrg.c_str(), strFlow.c_str());
 
       FlowdockStartListeningFunc StartListening = (FlowdockStartListeningFunc)library.Resolve("FlowdockStartListening");
       if( !StartListening )
@@ -138,6 +136,47 @@ int main(int argc, char *argv[])
 #else
          usleep(1000*1000);
 #endif
+
+         FlowdockGetListenMessageCountFunc GetListenMessagesCount = (FlowdockGetListenMessageCountFunc)library.Resolve("FlowdockGetListenMessageCount");
+         if( !GetListenMessagesCount )
+            return 0;
+
+         while(true) {
+            int nCount = GetListenMessagesCount(pFlowdock);
+            if( nCount <= 0 )
+               break;
+
+            FlowdockGetListenMessageTypeFunc GetListenMessagesType = (FlowdockGetListenMessageTypeFunc)library.Resolve("FlowdockGetListenMessageType");
+            if( !GetListenMessagesType )
+               return 0;
+
+            int nType = GetListenMessagesType(pFlowdock, 0);
+
+            if( nType == 0 ) {
+               FlowdockGetMessageContentFunc GetMessage = (FlowdockGetMessageContentFunc)library.Resolve("FlowdockGetMessageContent");
+               if( !GetMessage )
+                  return 0;
+
+               char* pstrMessage = NULL;
+               int nSizeOfMessage = 0;
+               GetMessage(pFlowdock, 0, pstrMessage, nSizeOfMessage);
+
+               pstrMessage = new char[nSizeOfMessage + 1];
+
+               GetMessage(pFlowdock, 0, pstrMessage, nSizeOfMessage);
+
+               std::string strMessage(pstrMessage);
+
+               delete[] pstrMessage;
+               cout << "Message: " << strMessage << endl;
+            }
+
+            FlowdockRemoveListenMessageFunc RemoveListenMessage = (FlowdockRemoveListenMessageFunc)library.Resolve("FlowdockRemoveListenMessage");
+            if( !RemoveListenMessage )
+               return 0;
+
+            RemoveListenMessage(pFlowdock, 0);
+         }
       }
    }
 

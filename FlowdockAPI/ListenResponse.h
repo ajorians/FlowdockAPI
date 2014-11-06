@@ -16,10 +16,13 @@ class ListenResponse
 public:
    static ListenResponse* Create(const std::string& strMessage);
 
+   ListenEvent GetEvent() const;
+   std::string GetContent() const;
+
 protected:
    ListenResponse(ListenEvent eEvent, const std::vector<std::string>& astrTags, const std::string& strUUID, double dID,
                   const std::string& strFlow, const std::string& strContent, time_t timeSent, const std::string& strApp,
-                  const std::vector<std::string>& astrAttachments, double dUser);
+                  const std::vector<std::string>& astrAttachments, const std::string& strUser);
 
 protected:
    ListenEvent m_eEvent;
@@ -32,7 +35,7 @@ protected:
    time_t m_timeSent;
    std::string m_strApp;
    std::vector<std::string> m_astrAttachments;
-   double m_dUser;
+   std::string m_strUser;
 };
 
 #endif
