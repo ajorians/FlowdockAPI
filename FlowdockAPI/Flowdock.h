@@ -29,7 +29,10 @@ public:
    int GetListenMessagesCount() const;
    int GetListenMessageType(int nIndex) const;
    std::string GetListenMessageContent(int nIndex) const;
+   std::string GetListenMessageUser(int nIndex) const;
    bool RemoveListenMessage(int nIndex);
+
+   bool GetNicknameForUser(const std::string& strUser, std::string& strNickname) const;
 
 protected:
    static size_t listen_callback(void *ptr, size_t size, size_t nmemb, void *userdata);

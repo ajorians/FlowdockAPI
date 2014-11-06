@@ -16,6 +16,7 @@
 #include <iostream>
 
 #include "FlowdockUserList.h"
+#include "User.h"
 
 using namespace std;
 
@@ -126,10 +127,47 @@ FLOWDOCK_EXTERN int FlowdockGetMessageContent(FlowdockAPI api, int nIndex, char*
    return strMessageContent.size()>0 ? 1 : 0;
 }
 
+FLOWDOCK_EXTERN int FlowdockGetMessageUser(FlowdockAPI api, int nIndex, char* pstrMessageUser, int& nSizeOfMessageUser)
+{
+   Flowdock* pFlowdock = (Flowdock*)api;
+
+   std::string strMessageUser = pFlowdock->GetListenMessageUser(nIndex);
+   if( nSizeOfMessageUser > 0 )
+   {
+      memcpy(pstrMessageUser, strMessageUser.c_str(), nSizeOfMessageUser + 1);
+   }
+   else
+   {
+      nSizeOfMessageUser = strMessageUser.size();
+   }
+
+   return strMessageUser.size()>0 ? 1 : 0;
+}
+
 FLOWDOCK_EXTERN int FlowdockRemoveListenMessage(FlowdockAPI api, int nIndex)
 {
    Flowdock* pFlowdock = (Flowdock*)api;
    return pFlowdock->RemoveListenMessage(nIndex) ? 1 : 0;
+}
+
+FLOWDOCK_EXTERN int FlowdockGetNicknameForUser(FlowdockAPI api, char* pstrUser, char* pstrNickname, int& nSizeOfNickname)
+{
+   Flowdock* pFlowdock = (Flowdock*)api;
+
+   std::string strUser(pstrUser);
+   std::string strNickname;
+   bool bOK = pFlowdock->GetNicknameForUser(strUser, strNickname);
+   if( !bOK ) return 0;
+   if( nSizeOfNickname > 0 )
+   {
+      memcpy(pstrNickname, strNickname.c_str(), nSizeOfNickname + 1);
+   }
+   else
+   {
+      nSizeOfNickname = strNickname.size();
+   }
+
+   return strNickname.size()>0 ? 1 : 0;
 }
 
 Flowdock::Flowdock()
@@ -350,12 +388,40 @@ std::string Flowdock::GetListenMessageContent(int nIndex) const
    return strRet;
 }
 
+std::string Flowdock::GetListenMessageUser(int nIndex) const
+{
+   std::string strRet;
+   pthread_mutex_lock( &m_mutexResponse );
+   assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
+   ListenResponse* pResponse = m_apResponses[nIndex];
+   strRet = pResponse->GetUser();
+   pthread_mutex_unlock( &m_mutexResponse );
+   return strRet;
+}
+
 bool Flowdock::RemoveListenMessage(int nIndex)
 {
    pthread_mutex_lock( &m_mutexResponse );
    m_apResponses.erase(m_apResponses.begin()+nIndex);
    pthread_mutex_unlock( &m_mutexResponse );
    return true;
+}
+
+bool Flowdock::GetNicknameForUser(const std::string& strUser, std::string& strNickname) const
+{
+   if( m_apUsers.empty() )
+      return false;
+
+   for(std::vector<User*>::const_iterator it = m_apUsers.begin(); it != m_apUsers.end(); it++)
+   {
+      const User* pUser = *it;
+      if( pUser->GetIDString() == strUser )
+      {
+         strNickname = pUser->GetNickname();
+         return true;
+      }
+   }
+   return false;
 }
 
 size_t Flowdock::listen_callback(void *ptr, size_t size, size_t nmemb, void *userdata)

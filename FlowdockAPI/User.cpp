@@ -1,6 +1,7 @@
 #include "User.h"
 #include "JSON.h"
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -24,6 +25,19 @@ m_strStatus(strStatus)
 User::~User()
 {
 
+}
+
+std::string User::GetIDString() const
+{
+   std::stringstream stream;
+   stream << m_nID;
+   std::string strRet = stream.str();
+   return strRet;
+}
+
+std::string User::GetNickname() const
+{
+   return m_strNick;
 }
 
 User* User::Create(const std::string& strMessage)

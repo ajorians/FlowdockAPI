@@ -169,6 +169,37 @@ int main(int argc, char *argv[])
 
                delete[] pstrMessage;
                cout << "Message: " << strMessage << endl;
+
+               ///
+               FlowdockGetMessageUserFunc GetUser = (FlowdockGetMessageUserFunc)library.Resolve("FlowdockGetMessageUser");
+               if( !GetUser )
+                  return 0;
+
+               char* pstrUser = NULL;
+               int nSizeOfUser = 0;
+               GetUser(pFlowdock, 0, pstrMessage, nSizeOfUser);
+               pstrUser = new char[nSizeOfUser + 1];
+
+               GetUser(pFlowdock, 0, pstrUser, nSizeOfUser);
+
+               FlowdockGetNicknameForUserFunc GetNickname = (FlowdockGetNicknameForUserFunc)library.Resolve("FlowdockGetNicknameForUser");
+               if( !GetNickname )
+                  return 0;
+
+               char* pstrNickname = NULL;
+               int nSizeOfNickname = 0;
+               int nOK = GetNickname(pFlowdock, pstrUser, pstrNickname, nSizeOfNickname);
+               if( nOK == 1 ) {
+                  pstrNickname = new char[nSizeOfNickname + 1];
+
+                  GetNickname(pFlowdock, pstrUser, pstrNickname, nSizeOfNickname);
+
+                  std::string strNickname(pstrNickname);
+                  cout << "Person: " << strNickname << endl;
+                  delete[] pstrNickname;
+               }
+
+               delete[] pstrUser;
             }
 
             FlowdockRemoveListenMessageFunc RemoveListenMessage = (FlowdockRemoveListenMessageFunc)library.Resolve("FlowdockRemoveListenMessage");
