@@ -18,6 +18,7 @@ public:
 
    ListenEvent GetEvent() const;
    std::string GetContent() const;
+   std::string GetUser() const;
 
 protected:
    ListenResponse(ListenEvent eEvent, const std::vector<std::string>& astrTags, const std::string& strUUID, double dID,

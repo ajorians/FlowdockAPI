@@ -17,6 +17,9 @@ protected:
 public:
    ~User();
 
+   std::string GetIDString() const;
+   std::string GetNickname() const;
+
 protected:
    int m_nID;
    std::string m_strNick;

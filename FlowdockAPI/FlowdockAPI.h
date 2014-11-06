@@ -24,7 +24,10 @@ typedef int (*FlowdockStartListeningFunc)(FlowdockAPI api, const char* pstrUsern
 typedef int (*FlowdockGetListenMessageCountFunc)(FlowdockAPI api);
 typedef int (*FlowdockGetListenMessageTypeFunc)(FlowdockAPI api, int nIndex);
 typedef int (*FlowdockGetMessageContentFunc)(FlowdockAPI api, int nIndex, char* pstrMessage, int& nSizeOfMessage);
+typedef int (*FlowdockGetMessageUserFunc)(FlowdockAPI api, int nIndex, char* pstrMessageUser, int& nSizeOfMessageUser);
 typedef int (*FlowdockRemoveListenMessageFunc)(FlowdockAPI api, int nIndex);//Hopefully nIndex is 0 or you are aware of threading issues
+
+typedef int (*FlowdockGetNicknameForUserFunc)(FlowdockAPI api, char* pstrUser, char* pstrNickname, int& nSizeOfNickname);
 
 FLOWDOCK_EXTERN int FlowdockCreate(FlowdockAPI* api);
 FLOWDOCK_EXTERN int FlowdockFree(FlowdockAPI* api);
@@ -41,6 +44,9 @@ FLOWDOCK_EXTERN int FlowdockStartListening(FlowdockAPI api, const char* pstrUser
 FLOWDOCK_EXTERN int FlowdockGetListenMessageCount(FlowdockAPI api);
 FLOWDOCK_EXTERN int FlowdockGetListenMessageType(FlowdockAPI api, int nIndex);
 FLOWDOCK_EXTERN int FlowdockGetMessageContent(FlowdockAPI api, int nIndex, char* pstrMessage, int& nSizeOfMessage);
+FLOWDOCK_EXTERN int FlowdockGetMessageUser(FlowdockAPI api, int nIndex, char* pstrMessageUser, int& nSizeOfMessageUser);
 FLOWDOCK_EXTERN int FlowdockRemoveListenMessage(FlowdockAPI api, int nIndex);//Hopefully nIndex is 0 or you are aware of threading issues
+
+FLOWDOCK_EXTERN int FlowdockGetNicknameForUser(FlowdockAPI api, char* pstrUser, char* pstrNickname, int& nSizeOfNickname);
 
 #endif

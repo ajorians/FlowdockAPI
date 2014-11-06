@@ -170,3 +170,8 @@ std::string ListenResponse::GetContent() const
 {
    return m_strContent;
 }
+
+std::string ListenResponse::GetUser() const
+{
+   return m_strUser;
+}
