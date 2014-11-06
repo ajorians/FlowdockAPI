@@ -5,25 +5,15 @@
 
 using namespace std;
 
-namespace 
-{
-   std::string WideToNarrow(const std::wstring& w)
-   {
-      std::string s( w.begin(), w.end() );
-      return s;
-   }
-}
-
-void UserResponse::Parse(const std::string& strMessage, std::vector<User*>& arrpUsers)
+bool UserResponse::Parse(const std::string& strMessage, std::vector<User*>& arrpUsers)
 {
    cout << "User response: " << strMessage << endl;
-   return;
-   /*std::vector<User> arrUsers;
-   JSONValue *value = JSON::Parse(strMessage.c_str());
+   std::vector<User> arrUsers;
+   JSON *value = JSON::Parse(strMessage.c_str());
    if( value == NULL )
    {
       cout << "Value is null" << endl;
-      return;
+      return false;
    }
 
    cout << "Get as array" << endl;
@@ -32,10 +22,11 @@ void UserResponse::Parse(const std::string& strMessage, std::vector<User*>& arrp
    cout << "elements: " << aUsers.size() << endl;
    for(unsigned int i=0; i<aUsers.size(); i++)
    {
-      std::string strUser = WideToNarrow(aUsers[i]->Stringify());
-      cout << "strUser: " << strUser << endl;
-      User* pUser = User::Create(strUser);
+      std::string strUserObject = aUsers[i]->Stringify();
+      cout << "strUser: " << strUserObject << endl;
+      User* pUser = User::Create(strUserObject);
       if( pUser )
          arrpUsers.push_back(pUser);
-   }*/
+   }
+   return true;
 }

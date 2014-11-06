@@ -10,7 +10,7 @@ class User;
 class UserResponse
 {
 public:
-   static void Parse(const std::string& strMessage, std::vector<User*>& arrpUsers);
+   static bool Parse(const std::string& strMessage, std::vector<User*>& arrpUsers);
 };
 
 #endif

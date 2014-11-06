@@ -14,6 +14,9 @@ protected:
    User(int nID, const std::string& strNick, const std::string& strEMail, const std::string& strAvatar, const std::string strName, 
                 const std::string& strWebsite, bool bDisabled, time_t timeLastActivity, time_t timeLastPing, bool bInFlow, const std::string& strStatus);
 
+public:
+   ~User();
+
 protected:
    int m_nID;
    std::string m_strNick;
