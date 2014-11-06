@@ -4,15 +4,6 @@
 
 using namespace std;
 
-namespace 
-{
-   std::string WideToNarrow(const std::wstring& w)
-   {
-      std::string s( w.begin(), w.end() );
-      return s;
-   }
-}
-
 User::User(int nID, const std::string& strNick, const std::string& strEMail, const std::string& strAvatar, const std::string strName, 
                 const std::string& strWebsite, bool bDisabled, time_t timeLastActivity, time_t timeLastPing, bool bInFlow, const std::string& strStatus)
 :
@@ -30,106 +21,110 @@ m_strStatus(strStatus)
 {
 }
 
+User::~User()
+{
+
+}
+
 User* User::Create(const std::string& strMessage)
 {
    cout << "User: " << strMessage << endl;
-   return NULL;
-   //JSONValue *value = JSON::Parse(strMessage.c_str());
-   //if( value == NULL )
-   //   return NULL;
+   JSON *value = JSON::Parse(strMessage.c_str());
+   if( value == NULL )
+      return NULL;
 
-   //if( value->IsObject() == false )
-   //   return NULL;
+   if( value->IsObject() == false )
+      return NULL;
 
-   //JSONObject root;
-   //root = value->AsObject();
+   JSONObjects root;
+   root = value->AsObject();
 
-   ////ID
-   //if( root.find(L"id") == root.end() || !root[L"id"]->IsNumber() )
-   //   return NULL;
+   //ID
+   if( root.find("id") == root.end() || !root["id"]->IsNumber() )
+      return NULL;
 
-   //int nID = root[L"id"]->AsNumber();
+   int nID = root["id"]->AsNumber();
 
-   ////Nick
-   //if( root.find(L"nick") == root.end() || !root[L"nick"]->IsString() )
-   //   return NULL;
+   //Nick
+   if( root.find("nick") == root.end() || !root["nick"]->IsString() )
+      return NULL;
 
-   //std::string strNick = WideToNarrow(root[L"nick"]->AsString());
+   std::string strNick = root["nick"]->AsString();
 
-   ////EMail
-   //if( root.find(L"email") == root.end() || !root[L"email"]->IsString() )
-   //   return NULL;
+   //EMail
+   if( root.find("email") == root.end() || !root["email"]->IsString() )
+      return NULL;
 
-   //std::string strEMail = WideToNarrow(root[L"email"]->AsString());
+   std::string strEMail = root["email"]->AsString();
 
-   ////Avatar
-   //if( root.find(L"avatar") == root.end() || !root[L"avatar"]->IsString() )
-   //   return NULL;
+   //Avatar
+   if( root.find("avatar") == root.end() || !root["avatar"]->IsString() )
+      return NULL;
 
-   //std::string strAvatar = WideToNarrow(root[L"avatar"]->AsString());
+   std::string strAvatar = root["avatar"]->AsString();
 
-   ////Name
-   //if( root.find(L"name") == root.end() || !root[L"name"]->IsString() )
-   //   return NULL;
+   //Name
+   if( root.find("name") == root.end() || !root["name"]->IsString() )
+      return NULL;
 
-   //std::string strName = WideToNarrow(root[L"name"]->AsString());
+   std::string strName = root["name"]->AsString();
 
-   ////Website
-   //if( root.find(L"website") == root.end() || !root[L"website"]->IsString() )
-   //   return NULL;
+   //Website
+   if( root.find("website") == root.end() || !root["website"]->IsString() )
+      return NULL;
 
-   //std::string strWebsite = WideToNarrow(root[L"website"]->AsString());
+   std::string strWebsite = root["website"]->AsString();
 
-   ////Disabled
-   //if( root.find(L"disabled") == root.end() || !root[L"disabled"]->IsBool() )
-   //   return NULL;
+   //Disabled
+   if( root.find("disabled") == root.end() || !root["disabled"]->IsBool() )
+      return NULL;
 
-   //bool bDisabled = root[L"disabled"]->AsBool();
+   bool bDisabled = root["disabled"]->AsBool();
 
-   ////Last_activity
-   //if( root.find(L"last_activity") == root.end() || !root[L"last_activity"]->IsNumber() )
-   //   return NULL;
+   //Last_activity
+   if( root.find("last_activity") == root.end() || !root["last_activity"]->IsNumber() )
+      return NULL;
 
-   //double dLastActivity = root[L"last_activity"]->AsNumber();
+   double dLastActivity = root["last_activity"]->AsNumber();
 
-   //double dSecondsLastActivity = dLastActivity/1000;
-   //time_t timeLastActivity = dSecondsLastActivity;
+   double dSecondsLastActivity = dLastActivity/1000;
+   time_t timeLastActivity = dSecondsLastActivity;
 
-   ////Sent
-   //if( root.find(L"last_ping") == root.end() || !root[L"last_ping"]->IsNumber() )
-   //   return NULL;
+   //Sent
+   if( root.find("last_ping") == root.end() || !root["last_ping"]->IsNumber() )
+      return NULL;
 
-   //double dLastPing = root[L"last_ping"]->AsNumber();
+   double dLastPing = root["last_ping"]->AsNumber();
 
-   //double dSecondsLastPing = dLastPing/1000;
-   //time_t timeLastPing = dLastPing;
+   double dSecondsLastPing = dLastPing/1000;
+   time_t timeLastPing = dLastPing;
 
-   ////in_flow
-   //if( root.find(L"in_flow") == root.end() || !root[L"in_flow"]->IsBool() )
-   //   return NULL;
+   //in_flow
+   if( root.find("in_flow") == root.end() || !root["in_flow"]->IsBool() )
+      return NULL;
 
-   //bool bInFlow = root[L"in_flow"]->AsBool();
+   bool bInFlow = root["in_flow"]->AsBool();
 
-   ////Status
-   //if( root.find(L"status") == root.end() || !root[L"status"]->IsString() )
-   //   return NULL;
+   //Status
+   std::string strStatus;
+   if( root.find("status") != root.end() && root["status"]->IsString() ) {
+      strStatus = root["status"]->AsString();
+   }
 
-   //std::string strStatus = WideToNarrow(root[L"status"]->AsString());
+   delete(value);
 
-   //delete(value);
+   User* pResponse = new User(
+      nID,
+      strNick,
+      strEMail,
+      strAvatar,
+      strName,
+      strWebsite,
+      bDisabled,
+      timeLastActivity,
+      timeLastPing,
+      bInFlow,
+      strStatus);
 
-   //User* pResponse = new User(
-   //   nID,
-   //   strNick,
-   //   strEMail,
-   //   strAvatar,
-   //   strName,
-   //   strWebsite,
-   //   bDisabled,
-   //   timeLastActivity,
-   //   timeLastPing,
-   //   bInFlow,
-   //   strStatus);
-
-   //return pResponse;
+   return pResponse;
 }
