@@ -17,7 +17,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-   bool bListen = false, bGetUsers = false;
+   bool bListen = false, bGetUsers = false, bGetFlows = false;
    std::string strOrg, strFlow, strUser, strPassword, strUploadFile, strMessage;
    for(int i=0; i<argc; i++)
    {
@@ -42,6 +42,9 @@ int main(int argc, char *argv[])
 
       if( str == "--getusers" )
          bGetUsers = true;
+
+      if( str == "--getflows" )
+         bGetFlows = true;
 
       if( str == "--listen" )
          bListen = true;
@@ -110,6 +113,17 @@ int main(int argc, char *argv[])
          return 0;
 
       GetUsers(pFlowdock, strOrg.c_str(), strFlow.c_str(), strUser.c_str(), strPassword.c_str());
+   }
+
+   ///
+
+   if( bGetFlows )
+   {
+      FlowdockGetFlowsFunc GetFlows = (FlowdockGetFlowsFunc)library.Resolve("FlowdockGetFlows");
+      if( !GetFlows )
+         return 0;
+
+      GetFlows(pFlowdock, strOrg.c_str(), strFlow.c_str(), strUser.c_str(), strPassword.c_str());
    }
 
    ///
