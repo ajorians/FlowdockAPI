@@ -29,7 +29,7 @@ public:
    bool UploadFile(const std::string& strFilePath);
 
    bool GetUsers(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword);
-   bool GetFlows(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword);
+   bool GetFlows(const std::string& strUsername, const std::string& strPassword);
 
    bool IsListening();
    bool StopListening();

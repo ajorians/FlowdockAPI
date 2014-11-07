@@ -9,7 +9,7 @@ class Flow;
 class FlowdockFlowList
 {
 public:
-   FlowdockFlowList(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword);
+   FlowdockFlowList(const std::string& strUsername, const std::string& strPassword);
    bool GetFlows(std::vector<Flow*>& apFlows);
 
 protected:

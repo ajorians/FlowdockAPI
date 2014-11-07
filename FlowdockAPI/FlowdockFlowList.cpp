@@ -5,7 +5,7 @@
 #include <curl/curl.h>
 #include <cassert>
 
-FlowdockFlowList::FlowdockFlowList(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword)
+FlowdockFlowList::FlowdockFlowList(const std::string& strUsername, const std::string& strPassword)
 {
    CURL *curl;
    CURLcode res;
