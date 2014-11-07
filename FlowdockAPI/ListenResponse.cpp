@@ -175,3 +175,8 @@ std::string ListenResponse::GetUser() const
 {
    return m_strUser;
 }
+
+std::string ListenResponse::GetFlow() const
+{
+   return m_strFlow;
+}

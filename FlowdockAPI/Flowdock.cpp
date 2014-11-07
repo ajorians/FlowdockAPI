@@ -17,6 +17,9 @@
 
 #include "FlowdockUserList.h"
 #include "User.h"
+#include "FlowdockFlowList.h"
+#include "Flow.h"
+#include "FlowdockFindID.h"
 
 using namespace std;
 
@@ -111,6 +114,14 @@ FLOWDOCK_EXTERN int FlowdockGetUsers(FlowdockAPI api, const char* pstrOrg, const
    return pFlowdock->GetUsers(strOrg, strFlow, strUsername, strPassword) ? 1 : 0;
 }
 
+FLOWDOCK_EXTERN int FlowdockGetFlows(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword)
+{
+   std::string strOrg(pstrOrg), strFlow(pstrFlow), strUsername(pstrUsername), strPassword(pstrPassword);
+
+   Flowdock* pFlowdock = (Flowdock*)api;
+   return pFlowdock->GetFlows(strOrg, strFlow, strUsername, strPassword) ? 1 : 0;
+}
+
 FLOWDOCK_EXTERN int FlowdockIsListening(FlowdockAPI api)
 {
    Flowdock* pFlowdock = (Flowdock*)api;
@@ -196,6 +207,23 @@ FLOWDOCK_EXTERN int FlowdockGetMessageUser(FlowdockAPI api, int nIndex, char* ps
    return strMessageUser.size()>0 ? 1 : 0;
 }
 
+FLOWDOCK_EXTERN int FlowdockGetMessageFlow(FlowdockAPI api, int nIndex, char* pstrMessageFlow, int& nSizeOfMessageFlow)
+{
+   Flowdock* pFlowdock = (Flowdock*)api;
+
+   std::string strMessageFlow = pFlowdock->GetListenMessageFlow(nIndex);
+   if( nSizeOfMessageFlow > 0 )
+   {
+      memcpy(pstrMessageFlow, strMessageFlow.c_str(), nSizeOfMessageFlow + 1);
+   }
+   else
+   {
+      nSizeOfMessageFlow = strMessageFlow.size();
+   }
+
+   return strMessageFlow.size()>0 ? 1 : 0;
+}
+
 FLOWDOCK_EXTERN int FlowdockRemoveListenMessage(FlowdockAPI api, int nIndex)
 {
    Flowdock* pFlowdock = (Flowdock*)api;
@@ -220,6 +248,26 @@ FLOWDOCK_EXTERN int FlowdockGetNicknameForUser(FlowdockAPI api, char* pstrUser, 
    }
 
    return strNickname.size()>0 ? 1 : 0;
+}
+
+FLOWDOCK_EXTERN int FlowdockGetFlowByID(FlowdockAPI api, char* pstrID, char* pstrFlowName, int& nSizeOfFlowName)
+{
+   Flowdock* pFlowdock = (Flowdock*)api;
+
+   std::string strID(pstrID);
+   std::string strFlowName;
+   bool bOK = pFlowdock->GetFlowNameByID(strID, strFlowName);
+   if( !bOK ) return 0;
+   if( nSizeOfFlowName > 0 )
+   {
+      memcpy(pstrFlowName, strFlowName.c_str(), nSizeOfFlowName + 1);
+   }
+   else
+   {
+      nSizeOfFlowName = strFlowName.size();
+   }
+
+   return strFlowName.size()>0 ? 1 : 0;
 }
 
 Flowdock::Flowdock()
@@ -403,6 +451,12 @@ bool Flowdock::GetUsers(const std::string& strOrg, const std::string& strFlow, c
    return UserListRetriever.GetUsers(m_apUsers);
 }
 
+bool Flowdock::GetFlows(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword)
+{
+   FlowdockFlowList FlowListRetriever(strOrg, strFlow, strUsername, strPassword);
+   return FlowListRetriever.GetFlows(m_apFlows);
+}
+
 bool Flowdock::IsListening()
 {
    return m_bListening;
@@ -505,6 +559,17 @@ std::string Flowdock::GetListenMessageUser(int nIndex) const
    return strRet;
 }
 
+std::string Flowdock::GetListenMessageFlow(int nIndex) const
+{
+   std::string strRet;
+   pthread_mutex_lock( &m_mutexResponse );
+   assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
+   ListenResponse* pResponse = m_apResponses[nIndex];
+   strRet = pResponse->GetFlow();
+   pthread_mutex_unlock( &m_mutexResponse );
+   return strRet;
+}
+
 bool Flowdock::RemoveListenMessage(int nIndex)
 {
    pthread_mutex_lock( &m_mutexResponse );
@@ -524,6 +589,23 @@ bool Flowdock::GetNicknameForUser(const std::string& strUser, std::string& strNi
       if( pUser->GetIDString() == strUser )
       {
          strNickname = pUser->GetNickname();
+         return true;
+      }
+   }
+   return false;
+}
+
+bool Flowdock::GetFlowNameByID(const std::string& strID, std::string& strFlowname) const
+{
+   if( m_apFlows.empty() )
+      return false;
+
+   for(std::vector<Flow*>::const_iterator it = m_apFlows.begin(); it != m_apFlows.end(); it++)
+   {
+      const Flow* pFlow = *it;
+      if( pFlow->GetIDString() == strID )
+      {
+         strFlowname = pFlow->GetParamaterizedName();
          return true;
       }
    }

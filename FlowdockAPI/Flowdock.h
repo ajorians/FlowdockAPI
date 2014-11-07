@@ -9,6 +9,7 @@
 
 class ListenResponse;
 class User;
+class Flow;
 
 class Flowdock
 {
@@ -28,6 +29,7 @@ public:
    bool UploadFile(const std::string& strFilePath);
 
    bool GetUsers(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword);
+   bool GetFlows(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword);
 
    bool IsListening();
    bool StopListening();
@@ -41,9 +43,11 @@ public:
    int GetListenMessageType(int nIndex) const;
    std::string GetListenMessageContent(int nIndex) const;
    std::string GetListenMessageUser(int nIndex) const;
+   std::string GetListenMessageFlow(int nIndex) const;
    bool RemoveListenMessage(int nIndex);
 
    bool GetNicknameForUser(const std::string& strUser, std::string& strNickname) const;
+   bool GetFlowNameByID(const std::string& strID, std::string& strFlowname) const;
 
 protected:
    static int listen_progress(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow);
@@ -75,6 +79,7 @@ protected:
    std::vector<ListenResponse*> m_apResponses;
 
    std::vector<User*> m_apUsers;
+   std::vector<Flow*> m_apFlows;
 };
 
 
