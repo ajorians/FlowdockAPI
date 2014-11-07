@@ -19,6 +19,7 @@ public:
 
    std::string GetIDString() const;
    std::string GetNickname() const;
+   std::string GetEMail() const;
 
 protected:
    int m_nID;
