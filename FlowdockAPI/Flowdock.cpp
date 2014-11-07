@@ -42,11 +42,41 @@ FLOWDOCK_EXTERN int FlowdockFree(FlowdockAPI *api)
    return 0;
 }
 
+FLOWDOCK_EXTERN int FlowdockSetOrgFlow(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow)
+{
+   std::string strOrg(pstrOrg), strFlow(pstrFlow);
+   Flowdock* pFlowdock = (Flowdock*)api;
+   pFlowdock->SetOrgFlow(strOrg, strFlow);
+   return 0;
+}
+
+FLOWDOCK_EXTERN int FlowdockSetUsernamePassword(FlowdockAPI api, const char* pstrUsername, const char* pstrPassword)
+{
+   std::string strUsername(pstrUsername), strPassword(pstrPassword);
+   Flowdock* pFlowdock = (Flowdock*)api;
+   pFlowdock->SetUsernamePassword(strUsername, strPassword);
+   return 0;
+}
+
 FLOWDOCK_EXTERN int FlowdockSay(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage)
 {
    std::string strOrg(pstrOrg), strFlow(pstrFlow), strUsername(pstrUsername), strPassword(pstrPassword), strMessage(pstrMessage);
    Flowdock* pFlowdock = (Flowdock*)api;
    return pFlowdock->Say(strOrg, strFlow, strUsername, strPassword, strMessage) ? 1 : 0;
+}
+
+FLOWDOCK_EXTERN int FlowdockSayOrgFlowMessage(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrMessage)
+{
+   std::string strOrg(pstrOrg), strFlow(pstrFlow), strMessage(pstrMessage);
+   Flowdock* pFlowdock = (Flowdock*)api;
+   return pFlowdock->Say(strOrg, strFlow, strMessage) ? 1 : 0;
+}
+
+FLOWDOCK_EXTERN int FlowdockSayDefaults(FlowdockAPI api, const char* pstrMessage)
+{
+   std::string strMessage(pstrMessage);
+   Flowdock* pFlowdock = (Flowdock*)api;
+   return pFlowdock->Say(strMessage) ? 1 : 0;
 }
 
 FLOWDOCK_EXTERN int FlowdockUploadFile(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrFilePath)
@@ -55,6 +85,22 @@ FLOWDOCK_EXTERN int FlowdockUploadFile(FlowdockAPI api, const char* pstrOrg, con
 
    Flowdock* pFlowdock = (Flowdock*)api;
    return pFlowdock->UploadFile(strOrg, strFlow, strUsername, strPassword, strFilePath) ? 1 : 0;
+}
+
+FLOWDOCK_EXTERN int FlowdockUploadOrgFlowFile(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrFilePath)
+{
+   std::string strOrg(pstrOrg), strFlow(pstrFlow), strFilePath(pstrFilePath);
+
+   Flowdock* pFlowdock = (Flowdock*)api;
+   return pFlowdock->UploadFile(strOrg, strFlow, strFilePath) ? 1 : 0;
+}
+
+FLOWDOCK_EXTERN int FlowdockUploadFileDefaults(FlowdockAPI api, const char* pstrFilePath)
+{
+   std::string strFilePath(pstrFilePath);
+
+   Flowdock* pFlowdock = (Flowdock*)api;
+   return pFlowdock->UploadFile(strFilePath) ? 1 : 0;
 }
 
 FLOWDOCK_EXTERN int FlowdockGetUsers(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword)
@@ -96,6 +142,12 @@ FLOWDOCK_EXTERN int FlowdockStartListening(FlowdockAPI api, const char* pstrUser
    std::string strUsername(pstrUsername), strPassword(pstrPassword);
    Flowdock* pFlowdock = (Flowdock*)api;
    return pFlowdock->StartListening(strUsername, strPassword) ? 1 : 0;
+}
+
+FLOWDOCK_EXTERN int FlowdockStartListeningDefaults(FlowdockAPI api)
+{
+   Flowdock* pFlowdock = (Flowdock*)api;
+   return pFlowdock->StartListening() ? 1 : 0;
 }
 
 FLOWDOCK_EXTERN int FlowdockGetListenMessageCount(FlowdockAPI api)
@@ -197,6 +249,20 @@ Flowdock::~Flowdock()
    curl_global_cleanup();
 }
 
+bool Flowdock::SetOrgFlow(const std::string& strOrg, const std::string& strFlow)
+{
+   m_strDefaultOrg = strOrg;
+   m_strDefaultFlow = strFlow;
+   return true;
+}
+
+bool Flowdock::SetUsernamePassword(const std::string& strUsername, const std::string& strPassword)
+{
+   m_strDefaultUsername = strUsername;
+   m_strDefaultPassword = strPassword;
+   return true;
+}
+
 bool Flowdock::Say(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword, const std::string& strMessage)
 {
    CURL *curl;
@@ -245,6 +311,22 @@ bool Flowdock::Say(const std::string& strOrg, const std::string& strFlow, const 
    curl_easy_cleanup(curl);
 
    return static_cast<int>(http_code) == 200;
+}
+
+bool Flowdock::Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage)
+{
+   assert(!m_strDefaultUsername.empty() && !m_strDefaultPassword.empty());
+   if( m_strDefaultUsername.empty() || m_strDefaultPassword.empty() )
+      return false;
+   return Say(strOrg, strFlow, m_strDefaultUsername, m_strListenPassword, strMessage);
+}
+
+bool Flowdock::Say(const std::string& strMessage)
+{
+   assert( !m_strDefaultOrg.empty() && !m_strDefaultFlow.empty() && !m_strDefaultUsername.empty() && !m_strDefaultPassword.empty());
+   if( m_strDefaultOrg.empty() || m_strDefaultFlow.empty() ||m_strDefaultUsername.empty() || m_strDefaultPassword.empty() )
+      return false;
+   return Say(m_strDefaultOrg, m_strDefaultFlow, m_strDefaultUsername, m_strListenPassword, strMessage);
 }
 
 bool Flowdock::UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword, const std::string& strFilePath)
@@ -297,6 +379,22 @@ bool Flowdock::UploadFile(const std::string& strOrg, const std::string& strFlow,
    curl_easy_cleanup(curl);
 
    return static_cast<int>(http_code) == 200;
+}
+
+bool Flowdock::UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strFilePath)
+{
+   assert(!m_strDefaultUsername.empty() && !m_strDefaultPassword.empty());
+   if( m_strDefaultUsername.empty() || m_strDefaultPassword.empty() )
+      return false;
+   return UploadFile(strOrg, strFlow, m_strDefaultUsername, m_strListenPassword, strFilePath);
+}
+
+bool Flowdock::UploadFile(const std::string& strFilePath)
+{
+   assert( !m_strDefaultOrg.empty() && !m_strDefaultFlow.empty() && !m_strDefaultUsername.empty() && !m_strDefaultPassword.empty());
+   if( m_strDefaultOrg.empty() || m_strDefaultFlow.empty() ||m_strDefaultUsername.empty() || m_strDefaultPassword.empty() )
+      return false;
+   return UploadFile(m_strDefaultOrg, m_strDefaultFlow, m_strDefaultUsername, m_strListenPassword, strFilePath);
 }
 
 bool Flowdock::GetUsers(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword)
@@ -355,6 +453,14 @@ bool Flowdock::StartListening(const std::string& strUserName, const std::string&
 
    int iRet = pthread_create( &m_threadListen, NULL, Flowdock::ListenThread, (void*)this);
    return true;
+}
+
+bool Flowdock::StartListening()
+{
+   assert( !m_strDefaultUsername.empty() && !m_strDefaultPassword.empty());
+   if( m_strDefaultUsername.empty() || m_strDefaultPassword.empty() )
+      return false;
+   return StartListening(m_strDefaultUsername, m_strListenPassword);
 }
 
 int Flowdock::GetListenMessagesCount() const
