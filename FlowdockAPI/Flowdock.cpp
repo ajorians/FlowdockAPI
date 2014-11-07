@@ -114,12 +114,12 @@ FLOWDOCK_EXTERN int FlowdockGetUsers(FlowdockAPI api, const char* pstrOrg, const
    return pFlowdock->GetUsers(strOrg, strFlow, strUsername, strPassword) ? 1 : 0;
 }
 
-FLOWDOCK_EXTERN int FlowdockGetFlows(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword)
+FLOWDOCK_EXTERN int FlowdockGetFlows(FlowdockAPI api, const char* pstrUsername, const char* pstrPassword)
 {
-   std::string strOrg(pstrOrg), strFlow(pstrFlow), strUsername(pstrUsername), strPassword(pstrPassword);
+   std::string strUsername(pstrUsername), strPassword(pstrPassword);
 
    Flowdock* pFlowdock = (Flowdock*)api;
-   return pFlowdock->GetFlows(strOrg, strFlow, strUsername, strPassword) ? 1 : 0;
+   return pFlowdock->GetFlows(strUsername, strPassword) ? 1 : 0;
 }
 
 FLOWDOCK_EXTERN int FlowdockIsListening(FlowdockAPI api)
@@ -451,9 +451,9 @@ bool Flowdock::GetUsers(const std::string& strOrg, const std::string& strFlow, c
    return UserListRetriever.GetUsers(m_apUsers);
 }
 
-bool Flowdock::GetFlows(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword)
+bool Flowdock::GetFlows(const std::string& strUsername, const std::string& strPassword)
 {
-   FlowdockFlowList FlowListRetriever(strOrg, strFlow, strUsername, strPassword);
+   FlowdockFlowList FlowListRetriever(strUsername, strPassword);
    return FlowListRetriever.GetFlows(m_apFlows);
 }
 
