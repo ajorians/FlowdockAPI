@@ -655,6 +655,18 @@ void Flowdock::ReceivedResponse(const std::string& strListenResponse)
    ListenResponse* pResponse = ListenResponse::Create(strListenResponse);
    if( pResponse != NULL )
    {
+      //It is possible to get messages from the same user that sent the message.
+      //Lets eliminate them here
+      for(std::vector<User*>::size_type i=0; i<m_apUsers.size(); i++) {
+         User* pUser = m_apUsers[i];
+         if( pUser->GetIDString() == pResponse->GetUser() ) {
+            if( pUser->GetEMail() == m_strListenUsername ) {
+               delete pResponse;
+               return;
+            }
+         }
+      }
+
       pthread_mutex_lock( &m_mutexResponse );
       m_apResponses.push_back(pResponse);
       pthread_mutex_unlock( &m_mutexResponse );

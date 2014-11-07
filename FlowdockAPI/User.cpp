@@ -40,6 +40,11 @@ std::string User::GetNickname() const
    return m_strNick;
 }
 
+std::string User::GetEMail() const
+{
+   return m_strEMail;
+}
+
 User* User::Create(const std::string& strMessage)
 {
    JSON *value = JSON::Parse(strMessage.c_str());
