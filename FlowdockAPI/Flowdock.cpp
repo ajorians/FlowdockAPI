@@ -460,7 +460,7 @@ bool Flowdock::StartListening()
    assert( !m_strDefaultUsername.empty() && !m_strDefaultPassword.empty());
    if( m_strDefaultUsername.empty() || m_strDefaultPassword.empty() )
       return false;
-   return StartListening(m_strDefaultUsername, m_strListenPassword);
+   return StartListening(m_strDefaultUsername, m_strDefaultPassword);
 }
 
 int Flowdock::GetListenMessagesCount() const
