@@ -16,15 +16,26 @@ public:
    Flowdock();
    ~Flowdock();
 
+   bool SetOrgFlow(const std::string& strOrg, const std::string& strFlow);
+   bool SetUsernamePassword(const std::string& strUsername, const std::string& strPassword);
+
    bool Say(const std::string& strOrg, const std::string& strFlow, const std::string& strUserName, const std::string& strPassword, const std::string& strMessage);
+   bool Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage);
+   bool Say(const std::string& strMessage);
+
    bool UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strUserName, const std::string& strPassword, const std::string& strFilePath);
+   bool UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strFilePath);
+   bool UploadFile(const std::string& strFilePath);
+
    bool GetUsers(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword);
 
    bool IsListening();
    bool StopListening();
    bool AddListenFlow(const std::string& strOrg, const std::string& strFlow);
    bool RemoveListenFlow(const std::string& strOrg, const std::string& strFlow);
+
    bool StartListening(const std::string& strUserName, const std::string& strPassword);
+   bool StartListening();
 
    int GetListenMessagesCount() const;
    int GetListenMessageType(int nIndex) const;
@@ -42,6 +53,11 @@ protected:
    void ReceivedResponse(const std::string& strListenResponse);
 
 protected:
+   std::string m_strDefaultOrg;
+   std::string m_strDefaultFlow;
+   std::string m_strDefaultUsername;
+   std::string m_strDefaultPassword;
+
    pthread_t m_threadListen;
    pthread_mutex_t m_mutexListen;
    volatile bool m_bExit;
