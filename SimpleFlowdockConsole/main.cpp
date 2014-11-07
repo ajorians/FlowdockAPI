@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
       if( !GetFlows )
          return 0;
 
-      GetFlows(pFlowdock, strOrg.c_str(), strFlow.c_str(), strUser.c_str(), strPassword.c_str());
+      GetFlows(pFlowdock, strUser.c_str(), strPassword.c_str());
    }
 
    ///
