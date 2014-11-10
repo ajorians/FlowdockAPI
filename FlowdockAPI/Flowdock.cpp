@@ -311,6 +311,7 @@ bool Flowdock::SetUsernamePassword(const std::string& strUsername, const std::st
    return true;
 }
 
+#include "JSON.h"
 bool Flowdock::Say(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword, const std::string& strMessage)
 {
    CURL *curl;
@@ -330,9 +331,20 @@ bool Flowdock::Say(const std::string& strOrg, const std::string& strFlow, const 
 
    std::string ctype_header = "Content-Type: application/json";
 
-   std::string data = "{ \"event\": \"message\",  \"content\": \"";
-   data += strMessage;
-   data += "\",  \"tags\":  [\"todo\", \"#feedback\", \"@all\"]}";
+   JSONObjects objs;
+   objs["event"] = new JSON("message");
+   objs["content"] = new JSON(strMessage);
+
+   //TODO: Tags! :)
+   /*JSONArray jsonTags;
+   jsonTags.push_back(new JSON("todo"));
+   jsonTags.push_back(new JSON("#feedback"));
+   jsonTags.push_back(new JSON("@all"));
+   objs["tags"] = new JSON(jsonTags);*/
+
+   JSON json(objs);
+
+   std::string data = json.Stringify();
 
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "ajclient/0.0.1");
    curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
