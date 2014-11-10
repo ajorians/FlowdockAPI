@@ -21,6 +21,8 @@
 #include "Flow.h"
 #include "FlowdockFindID.h"
 
+#include "JSON.h"
+
 using namespace std;
 
 #ifndef SAFE_DELETE
@@ -61,25 +63,28 @@ FLOWDOCK_EXTERN int FlowdockSetUsernamePassword(FlowdockAPI api, const char* pst
    return 0;
 }
 
-FLOWDOCK_EXTERN int FlowdockSay(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage)
+FLOWDOCK_EXTERN int FlowdockSay(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage, const char* pstrTags, const char* pstrExternalUserName)
 {
    std::string strOrg(pstrOrg), strFlow(pstrFlow), strUsername(pstrUsername), strPassword(pstrPassword), strMessage(pstrMessage);
+   std::string strTags(pstrTags), strExternalUsername(pstrExternalUserName);
    Flowdock* pFlowdock = (Flowdock*)api;
-   return pFlowdock->Say(strOrg, strFlow, strUsername, strPassword, strMessage) ? 1 : 0;
+   return pFlowdock->Say(strOrg, strFlow, strUsername, strPassword, strMessage, strTags, strExternalUsername) ? 1 : 0;
 }
 
-FLOWDOCK_EXTERN int FlowdockSayOrgFlowMessage(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrMessage)
+FLOWDOCK_EXTERN int FlowdockSayOrgFlowMessage(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrMessage, const char* pstrTags, const char* pstrExternalUserName)
 {
    std::string strOrg(pstrOrg), strFlow(pstrFlow), strMessage(pstrMessage);
+   std::string strTags(pstrTags), strExternalUsername(pstrExternalUserName);
    Flowdock* pFlowdock = (Flowdock*)api;
-   return pFlowdock->Say(strOrg, strFlow, strMessage) ? 1 : 0;
+   return pFlowdock->Say(strOrg, strFlow, strMessage, strTags, strExternalUsername) ? 1 : 0;
 }
 
-FLOWDOCK_EXTERN int FlowdockSayDefaults(FlowdockAPI api, const char* pstrMessage)
+FLOWDOCK_EXTERN int FlowdockSayDefaults(FlowdockAPI api, const char* pstrMessage, const char* pstrTags, const char* pstrExternalUserName)
 {
    std::string strMessage(pstrMessage);
+   std::string strTags(pstrTags), strExternalUsername(pstrExternalUserName);
    Flowdock* pFlowdock = (Flowdock*)api;
-   return pFlowdock->Say(strMessage) ? 1 : 0;
+   return pFlowdock->Say(strMessage, strTags, strExternalUsername) ? 1 : 0;
 }
 
 FLOWDOCK_EXTERN int FlowdockUploadFile(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrFilePath)
@@ -311,8 +316,13 @@ bool Flowdock::SetUsernamePassword(const std::string& strUsername, const std::st
    return true;
 }
 
-#include "JSON.h"
-bool Flowdock::Say(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword, const std::string& strMessage)
+bool Flowdock::Say(const std::string& strOrg, 
+   const std::string& strFlow, 
+   const std::string& strUsername, 
+   const std::string& strPassword, 
+   const std::string& strMessage,
+   const std::vector<std::string>& arrstrTags, 
+   const std::string& strExternalName )
 {
    CURL *curl;
    CURLcode res;
@@ -335,12 +345,15 @@ bool Flowdock::Say(const std::string& strOrg, const std::string& strFlow, const 
    objs["event"] = new JSON("message");
    objs["content"] = new JSON(strMessage);
 
-   //TODO: Tags! :)
-   /*JSONArray jsonTags;
-   jsonTags.push_back(new JSON("todo"));
-   jsonTags.push_back(new JSON("#feedback"));
-   jsonTags.push_back(new JSON("@all"));
-   objs["tags"] = new JSON(jsonTags);*/
+   JSONArray jsonTags;
+   for(std::vector<std::string>::size_type i=0; i<arrstrTags.size(); i++) {
+      jsonTags.push_back(new JSON(arrstrTags[i]));
+   }
+   if( jsonTags.size() > 0 )
+      objs["tags"] = new JSON(jsonTags);
+
+   if( strExternalName.length() > 0 )
+      objs["external_user_name"] = new JSON(strExternalName);
 
    JSON json(objs);
 
@@ -373,20 +386,53 @@ bool Flowdock::Say(const std::string& strOrg, const std::string& strFlow, const 
    return static_cast<int>(http_code) == 200;
 }
 
-bool Flowdock::Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage)
+bool Flowdock::Say(const std::string& strOrg, 
+   const std::string& strFlow, 
+   const std::string& strUserName, 
+   const std::string& strPassword, 
+   const std::string& strMessage, 
+   const std::string& strTagsCommaSeparated /*= std::string()*/, 
+   const std::string& strExternalName /*= std::string()*/)
+{
+   std::vector<std::string> arrTags;
+
+   size_t  start = 0, end = 0;
+
+   while ( end != string::npos)
+   {
+      end = strTagsCommaSeparated.find( ",", start);
+
+      // If at end, use length=maxLength.  Else use length=end-start.
+      arrTags.push_back( strTagsCommaSeparated.substr( start,
+         (end == string::npos) ? string::npos : end - start));
+
+      // If at end, use start=maxSize.  Else use start=end+delimiter.
+      start = (   ( end > (string::npos - 1) )
+         ?  string::npos  :  end + 1);
+   }
+   return Say(strOrg, strFlow, strUserName, strPassword, strMessage, arrTags, strExternalName);
+}
+
+bool Flowdock::Say(const std::string& strOrg, 
+   const std::string& strFlow, 
+   const std::string& strMessage, 
+   const std::string& strTagsCommaSeparated, 
+   const std::string& strExternalName)
 {
    assert(!m_strDefaultUsername.empty() && !m_strDefaultPassword.empty());
    if( m_strDefaultUsername.empty() || m_strDefaultPassword.empty() )
       return false;
-   return Say(strOrg, strFlow, m_strDefaultUsername, m_strListenPassword, strMessage);
+   return Say(strOrg, strFlow, m_strDefaultUsername, m_strListenPassword, strMessage, strTagsCommaSeparated, strExternalName);
 }
 
-bool Flowdock::Say(const std::string& strMessage)
+bool Flowdock::Say(const std::string& strMessage,
+   const std::string& strTagsCommaSeparated, 
+   const std::string& strExternalName)
 {
    assert( !m_strDefaultOrg.empty() && !m_strDefaultFlow.empty() && !m_strDefaultUsername.empty() && !m_strDefaultPassword.empty());
    if( m_strDefaultOrg.empty() || m_strDefaultFlow.empty() ||m_strDefaultUsername.empty() || m_strDefaultPassword.empty() )
       return false;
-   return Say(m_strDefaultOrg, m_strDefaultFlow, m_strDefaultUsername, m_strListenPassword, strMessage);
+   return Say(m_strDefaultOrg, m_strDefaultFlow, m_strDefaultUsername, m_strListenPassword, strMessage, strTagsCommaSeparated, strExternalName);
 }
 
 bool Flowdock::UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword, const std::string& strFilePath)
