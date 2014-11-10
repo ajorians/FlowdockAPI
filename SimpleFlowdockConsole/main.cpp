@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
       if( !Say )
          return 0;
 
-      Say(pFlowdock, strOrg.c_str(), strFlow.c_str(), strUser.c_str(), strPassword.c_str(), strMessage.c_str());
+      Say(pFlowdock, strOrg.c_str(), strFlow.c_str(), strUser.c_str(), strPassword.c_str(), strMessage.c_str(), "", "Build_bot");
    }
 
    ///
