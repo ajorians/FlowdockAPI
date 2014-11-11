@@ -2,6 +2,7 @@
 
 #include "UserResponse.h"
 #include <curl/curl.h>
+#include "User.h"
 
 FlowdockUserList::FlowdockUserList(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword)
 {
