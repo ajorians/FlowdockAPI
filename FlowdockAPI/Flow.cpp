@@ -110,10 +110,6 @@ Flow* Flow::Create(const std::string& strMessage)
    //join_url
    std::string strJoinURL;
    if( root.find("join_url") != root.end() && root["join_url"]->IsString() ) {
-     strJoinURL = root["join_url"]->AsString();
-   }
-   std::string strJoinURL;
-   if( root.find("join_url") != root.end() && root["join_url"]->IsString() ) {
       strJoinURL = root["join_url"]->AsString();
    }
 
