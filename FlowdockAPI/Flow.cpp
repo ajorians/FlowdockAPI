@@ -74,40 +74,40 @@ Flow* Flow::Create(const std::string& strMessage)
    std::string strParameterizedName = root["parameterized_name"]->AsString();
 
    //unread_mentions
-   if( root.find("unread_mentions") == root.end() || !root["unread_mentions"]->IsNumber() )
-      return NULL;
-
-   int nUnreadMentions = (int)root["unread_mentions"]->AsNumber();
+   int nUnreadMentions = 0;
+   if( root.find("unread_mentions") != root.end() && root["unread_mentions"]->IsNumber() ) {
+      nUnreadMentions = (int)root["unread_mentions"]->AsNumber();
+   }
 
    //open
-   if( root.find("open") == root.end() || !root["open"]->IsBool() )
-      return NULL;
-
-   bool bOpen = root["open"]->AsBool();
+   bool bOpen = false;
+   if( root.find("open") != root.end() && root["open"]->IsBool() ) {
+      bOpen = root["open"]->AsBool();
+   }
 
    //joined
-   if( root.find("joined") == root.end() || !root["joined"]->IsBool() )
-      return NULL;
-
-   bool bJoined = root["joined"]->AsBool();
+   bool bJoined = false;
+   if( root.find("joined") != root.end() && root["joined"]->IsBool() ) {
+      bJoined = root["joined"]->AsBool();
+   }
 
    //url
-   if( root.find("url") == root.end() || !root["url"]->IsString() )
-      return NULL;
-
-   std::string strURL = root["url"]->AsString();
+   std::string strURL;
+   if( root.find("url") != root.end() && root["url"]->IsString() ) {
+      strURL = root["url"]->AsString();
+   }
 
    //web_url
-   if( root.find("web_url") == root.end() || !root["web_url"]->IsString() )
-      return NULL;
-
-   std::string strWebURL = root["web_url"]->AsString();
+   std::string strWebURL;
+   if( root.find("web_url") != root.end() && root["web_url"]->IsString() ) {
+      strWebURL = root["web_url"]->AsString();
+   }
 
    //join_url
-   if( root.find("join_url") == root.end() || !root["join_url"]->IsString() )
-      return NULL;
-
-   std::string strJoinURL = root["join_url"]->AsString();
+   std::string strJoinURL;
+   if( root.find("join_url") != root.end() && root["join_url"]->IsString() ) {
+      strJoinURL = root["join_url"]->AsString();
+   }
 
    delete(value);
 

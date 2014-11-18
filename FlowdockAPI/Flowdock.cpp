@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <stdlib.h>
+#include <string.h>
 
 #ifndef WIN32
 #include <string.h>//?? TODO: Find out why including this?
@@ -31,6 +32,12 @@ using namespace std;
 
 #ifndef ARR_SIZE
 #define ARR_SIZE(x) sizeof(x)/sizeof(x[0])
+#endif
+
+#ifdef _MSC_VER 
+//not #if defined(_WIN32) || defined(_WIN64) because we have strncasecmp in mingw
+#define strncasecmp _strnicmp
+#define strcasecmp _stricmp
 #endif
 
 FLOWDOCK_EXTERN int FlowdockCreate(FlowdockAPI* api)
@@ -799,11 +806,16 @@ void Flowdock::ReceivedResponse(const std::string& strListenResponse)
       //Lets eliminate them here
       for(std::vector<User*>::size_type i=0; i<m_apUsers.size(); i++) {
          User* pUser = m_apUsers[i];
-         if( pUser->GetIDString() == pResponse->GetUser() ) {
-            if( pUser->GetEMail() == m_strListenUsername ) {
-               delete pResponse;
-               return;
-            }
+         bool bDropMessage = false;
+
+         if( strcasecmp(pUser->GetIDString().c_str(), pResponse->GetUser().c_str()) == 0 ) {
+            bDropMessage = true;
+         }
+
+         if( bDropMessage ) {
+            //Possible e-mail could differ with case; just drop if IDs match
+            delete pResponse;
+            return;
          }
       }
 

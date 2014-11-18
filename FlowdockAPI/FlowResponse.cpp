@@ -23,5 +23,5 @@ bool FlowResponse::Parse(const std::string& strMessage, std::vector<Flow*>& arrp
       if( pFlow )
          arrpFlows.push_back(pFlow);
    }
-   return true;
+   return arrpFlows.size() > 0;
 }
