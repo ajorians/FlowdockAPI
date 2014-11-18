@@ -741,6 +741,7 @@ void Flowdock::ListenWorker()
          strURL += (*it).m_strOrg;
          strURL += "/";
          strURL += (*it).m_strFlow;
+         bFirst = false;
       }
 
       curl = curl_easy_init();
