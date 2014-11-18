@@ -84,16 +84,16 @@ Flow* Flow::Create(const std::string& strMessage)
    }
 
    //open
-   if( root.find("open") == root.end() || !root["open"]->IsBool() )
-      return NULL;
-
-   bool bOpen = root["open"]->AsBool();
+   bool bOpen = false;
+   if( root.find("open") != root.end() && root["open"]->IsBool() ) {
+      bOpen = root["open"]->AsBool();
+   }
 
    //joined
-   if( root.find("joined") == root.end() || !root["joined"]->IsBool() )
-      return NULL;
-
-   bool bJoined = root["joined"]->AsBool();
+   bool bJoined = false;
+   if( root.find("joined") != root.end() && root["joined"]->IsBool() ) {
+      bJoined = root["joined"]->AsBool();
+   }
 
    //url
    std::string strURL;
@@ -111,6 +111,10 @@ Flow* Flow::Create(const std::string& strMessage)
    std::string strJoinURL;
    if( root.find("join_url") != root.end() && root["join_url"]->IsString() ) {
      strJoinURL = root["join_url"]->AsString();
+   }
+   std::string strJoinURL;
+   if( root.find("join_url") != root.end() && root["join_url"]->IsString() ) {
+      strJoinURL = root["join_url"]->AsString();
    }
 
    delete(value);
