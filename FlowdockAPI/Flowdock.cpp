@@ -244,6 +244,15 @@ FLOWDOCK_EXTERN int FlowdockGetMessageFlow(FlowdockAPI api, int nIndex, char* ps
    return strMessageFlow.size()>0 ? 1 : 0;
 }
 
+FLOWDOCK_EXTERN int FlowdockGetMessageID(FlowdockAPI api, int nIndex, int& nMessageID)
+{
+   Flowdock* pFlowdock = (Flowdock*)api;
+
+   nMessageID = pFlowdock->GetListenMessageID(nIndex);
+
+   return 1;
+}
+
 FLOWDOCK_EXTERN int FlowdockRemoveListenMessage(FlowdockAPI api, int nIndex)
 {
    Flowdock* pFlowdock = (Flowdock*)api;
@@ -652,6 +661,17 @@ std::string Flowdock::GetListenMessageFlow(int nIndex) const
    strRet = pResponse->GetFlow();
    pthread_mutex_unlock( &m_mutexResponse );
    return strRet;
+}
+
+int Flowdock::GetListenMessageID(int nIndex) const
+{
+   int nRet = -1;
+   pthread_mutex_lock( &m_mutexResponse );
+   assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
+   ListenResponse* pResponse = m_apResponses[nIndex];
+   nRet = pResponse->GetMessageID();
+   pthread_mutex_unlock( &m_mutexResponse );
+   return nRet;
 }
 
 bool Flowdock::RemoveListenMessage(int nIndex)

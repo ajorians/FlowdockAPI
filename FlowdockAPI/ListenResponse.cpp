@@ -180,3 +180,8 @@ std::string ListenResponse::GetFlow() const
 {
    return m_strFlow;
 }
+
+int ListenResponse::GetMessageID() const
+{
+   return (int)m_dID;
+}
