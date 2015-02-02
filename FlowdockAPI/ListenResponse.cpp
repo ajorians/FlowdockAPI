@@ -1,5 +1,8 @@
 #include "ListenResponse.h"
 #include "JSON.h"
+#include "Utils.h"
+#include <cstring>//For strlen
+#include <cstdlib>//For atoi
 #include <iostream>
 
 using namespace std;
@@ -68,6 +71,24 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
       return NULL;
 
    double dID = root["id"]->AsNumber();
+
+   if( eEvent == Comment && astrTags.size() > 0 )
+   {
+      for(unsigned int i=0; i<astrTags.size(); i++)
+      {
+         std::string strTag = astrTags[i];
+         if( strTag.length() > strlen("\"influx:") )
+         {
+            std::string strType = strTag.substr(0, strlen("\"influx:"));
+            if( strType == "\"influx:" )
+            {
+               std::string strID = strTag.substr(strlen("\"influx:"), strTag.length() - strlen("\"influx:")-1/*closing quote*/);
+               int nID = atoi(strID.c_str());
+               dID = nID;
+            }
+         }
+      }
+   }
 
    //Flow
    if( root.find("flow") == root.end() || !root["flow"]->IsString() )

@@ -23,6 +23,7 @@
 #include "FlowdockFindID.h"
 
 #include "JSON.h"
+#include "Utils.h"
 
 using namespace std;
 
@@ -39,14 +40,6 @@ using namespace std;
 #define strncasecmp _strnicmp
 #define strcasecmp _stricmp
 #endif
-
-std::string IntToString(int nValue)
-{
-   std::ostringstream oss;
-   oss << nValue;
-
-   return oss.str();
-}
 
 FLOWDOCK_EXTERN int FlowdockCreate(FlowdockAPI* api)
 {
