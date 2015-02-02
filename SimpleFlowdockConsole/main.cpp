@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
       if( str == "--thread" )//More like a comment
          nThread = atoi(argv[i+1]);
 
-      if( str == "--getusers" )
+      if( str == "--getusers" || str == "--getuserlist" )
          bGetUsers = true;
 
       if( str == "--getflows" )
@@ -60,6 +60,10 @@ int main(int argc, char *argv[])
       cout << "--upload file or --say message or --listen" << endl;
       cout << "--thread 12345 is you are replying to something" << endl;
       return 0;
+   }
+   if( bGetUsers == false )
+   {
+      cout << "Note: You didn't call --getusers so listen messages will probably be dropped!" << endl;
    }
 
    std::string strPath;

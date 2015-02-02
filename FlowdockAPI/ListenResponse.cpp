@@ -40,6 +40,8 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
    ListenEvent eEvent = Message;
    if( strEvent == "activity.user" )
       eEvent = Activity_User;
+   if( strEvent == "comment" )
+      eEvent = Comment;
 
    //Tags
    if( root.find("tags") == root.end() || !root["tags"]->IsArray() )
@@ -77,8 +79,14 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
    //Looks like content is an array showing last activity when somebody is typing
    //And a string when somebody wrote something
    std::string strContent;
-   if( root.find("content") != root.end() && root["content"]->IsString() ) {
+   if( eEvent != Comment && root.find("content") != root.end() && root["content"]->IsString() ) {
       strContent = root["content"]->AsString();
+   }
+   else if( eEvent == Comment && root.find("content") != root.end() && root["content"]->IsObject() ) {
+      JSON* pContent = root["content"];
+      if( pContent->HasChild("text") && pContent->Child("text")->IsString() ) {
+         strContent = pContent->Child("text")->AsString();
+      }
    }
 
    //Sent

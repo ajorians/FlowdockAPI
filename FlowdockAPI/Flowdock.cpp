@@ -837,6 +837,9 @@ void Flowdock::ListenWorker()
    }
 }
 
+#include <iostream>
+using namespace std;
+
 void Flowdock::ReceivedResponse(const std::string& strListenResponse)
 {
    ListenResponse* pResponse = ListenResponse::Create(strListenResponse);
