@@ -805,19 +805,21 @@ void Flowdock::ReceivedResponse(const std::string& strListenResponse)
    {
       //It is possible to get messages from the same user that sent the message.
       //Lets eliminate them here
+      bool bDropMessage = true;
       for(std::vector<User*>::size_type i=0; i<m_apUsers.size(); i++) {
          User* pUser = m_apUsers[i];
-         bool bDropMessage = false;
 
          if( strcasecmp(pUser->GetIDString().c_str(), pResponse->GetUser().c_str()) == 0 ) {
-            bDropMessage = true;
+            bDropMessage = false;//Yep we account for the user.  But if it is the bot whom posted the mssage
+            //it will need to be dropped.
+            if( strcasecmp(pUser->GetEMail().c_str(), m_strDefaultUsername.c_str()) == 0 )
+               bDropMessage = true;
          }
-
-         if( bDropMessage ) {
-            //Possible e-mail could differ with case; just drop if IDs match
-            delete pResponse;
-            return;
-         }
+      }
+      if( bDropMessage ) {
+         //Possible e-mail could differ with case
+         delete pResponse;
+         return;
       }
 
       pthread_mutex_lock( &m_mutexResponse );
