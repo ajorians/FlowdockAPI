@@ -40,6 +40,14 @@ using namespace std;
 #define strcasecmp _stricmp
 #endif
 
+std::string IntToString(int nValue)
+{
+   std::ostringstream oss;
+   oss << nValue;
+
+   return oss.str();
+}
+
 FLOWDOCK_EXTERN int FlowdockCreate(FlowdockAPI* api)
 {
    *api = new Flowdock;
@@ -70,28 +78,28 @@ FLOWDOCK_EXTERN int FlowdockSetUsernamePassword(FlowdockAPI api, const char* pst
    return 0;
 }
 
-FLOWDOCK_EXTERN int FlowdockSay(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage, const char* pstrTags, const char* pstrExternalUserName)
+FLOWDOCK_EXTERN int FlowdockSay(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName)
 {
    std::string strOrg(pstrOrg), strFlow(pstrFlow), strUsername(pstrUsername), strPassword(pstrPassword), strMessage(pstrMessage);
    std::string strTags(pstrTags), strExternalUsername(pstrExternalUserName);
    Flowdock* pFlowdock = (Flowdock*)api;
-   return pFlowdock->Say(strOrg, strFlow, strUsername, strPassword, strMessage, strTags, strExternalUsername) ? 1 : 0;
+   return pFlowdock->Say(strOrg, strFlow, strUsername, strPassword, strMessage, nCommentTo, strTags, strExternalUsername) ? 1 : 0;
 }
 
-FLOWDOCK_EXTERN int FlowdockSayOrgFlowMessage(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrMessage, const char* pstrTags, const char* pstrExternalUserName)
+FLOWDOCK_EXTERN int FlowdockSayOrgFlowMessage(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName)
 {
    std::string strOrg(pstrOrg), strFlow(pstrFlow), strMessage(pstrMessage);
    std::string strTags(pstrTags), strExternalUsername(pstrExternalUserName);
    Flowdock* pFlowdock = (Flowdock*)api;
-   return pFlowdock->Say(strOrg, strFlow, strMessage, strTags, strExternalUsername) ? 1 : 0;
+   return pFlowdock->Say(strOrg, strFlow, strMessage, nCommentTo, strTags, strExternalUsername) ? 1 : 0;
 }
 
-FLOWDOCK_EXTERN int FlowdockSayDefaults(FlowdockAPI api, const char* pstrMessage, const char* pstrTags, const char* pstrExternalUserName)
+FLOWDOCK_EXTERN int FlowdockSayDefaults(FlowdockAPI api, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName)
 {
    std::string strMessage(pstrMessage);
    std::string strTags(pstrTags), strExternalUsername(pstrExternalUserName);
    Flowdock* pFlowdock = (Flowdock*)api;
-   return pFlowdock->Say(strMessage, strTags, strExternalUsername) ? 1 : 0;
+   return pFlowdock->Say(strMessage, nCommentTo, strTags, strExternalUsername) ? 1 : 0;
 }
 
 FLOWDOCK_EXTERN int FlowdockUploadFile(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrFilePath)
@@ -328,6 +336,7 @@ bool Flowdock::Say(const std::string& strOrg,
    const std::string& strUsername, 
    const std::string& strPassword, 
    const std::string& strMessage,
+   int nCommentTo,
    const std::vector<std::string>& arrstrTags, 
    const std::string& strExternalName )
 {
@@ -339,6 +348,9 @@ bool Flowdock::Say(const std::string& strOrg,
    strURL += "/";
    strURL += strFlow;
    strURL += "/messages";
+   if( nCommentTo != -1 ) {
+      strURL += "/" + IntToString(nCommentTo) + "/comments";
+   }
 
    curl = curl_easy_init();
    if( !curl )
@@ -349,7 +361,12 @@ bool Flowdock::Say(const std::string& strOrg,
    std::string ctype_header = "Content-Type: application/json";
 
    JSONObjects objs;
-   objs["event"] = new JSON("message");
+   if( nCommentTo != -1 ) {
+      objs["event"] = new JSON("comment");
+   }
+   else {
+      objs["event"] = new JSON("message");
+   }
    objs["content"] = new JSON(strMessage);
 
    JSONArray jsonTags;
@@ -397,7 +414,8 @@ bool Flowdock::Say(const std::string& strOrg,
    const std::string& strFlow, 
    const std::string& strUserName, 
    const std::string& strPassword, 
-   const std::string& strMessage, 
+   const std::string& strMessage,
+   int nCommentTo,
    const std::string& strTagsCommaSeparated /*= std::string()*/, 
    const std::string& strExternalName /*= std::string()*/)
 {
@@ -417,29 +435,30 @@ bool Flowdock::Say(const std::string& strOrg,
       start = (   ( end > (string::npos - 1) )
          ?  string::npos  :  end + 1);
    }
-   return Say(strOrg, strFlow, strUserName, strPassword, strMessage, arrTags, strExternalName);
+   return Say(strOrg, strFlow, strUserName, strPassword, strMessage, nCommentTo, arrTags, strExternalName);
 }
 
 bool Flowdock::Say(const std::string& strOrg, 
    const std::string& strFlow, 
-   const std::string& strMessage, 
+   const std::string& strMessage,
+   int nCommentTo, 
    const std::string& strTagsCommaSeparated, 
    const std::string& strExternalName)
 {
    assert(!m_strDefaultUsername.empty() && !m_strDefaultPassword.empty());
    if( m_strDefaultUsername.empty() || m_strDefaultPassword.empty() )
       return false;
-   return Say(strOrg, strFlow, m_strDefaultUsername, m_strListenPassword, strMessage, strTagsCommaSeparated, strExternalName);
+   return Say(strOrg, strFlow, m_strDefaultUsername, m_strListenPassword, strMessage, nCommentTo, strTagsCommaSeparated, strExternalName);
 }
 
-bool Flowdock::Say(const std::string& strMessage,
+bool Flowdock::Say(const std::string& strMessage, int nCommentTo,
    const std::string& strTagsCommaSeparated, 
    const std::string& strExternalName)
 {
    assert( !m_strDefaultOrg.empty() && !m_strDefaultFlow.empty() && !m_strDefaultUsername.empty() && !m_strDefaultPassword.empty());
    if( m_strDefaultOrg.empty() || m_strDefaultFlow.empty() ||m_strDefaultUsername.empty() || m_strDefaultPassword.empty() )
       return false;
-   return Say(m_strDefaultOrg, m_strDefaultFlow, m_strDefaultUsername, m_strListenPassword, strMessage, strTagsCommaSeparated, strExternalName);
+   return Say(m_strDefaultOrg, m_strDefaultFlow, m_strDefaultUsername, m_strListenPassword, strMessage, nCommentTo, strTagsCommaSeparated, strExternalName);
 }
 
 bool Flowdock::UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword, const std::string& strFilePath)

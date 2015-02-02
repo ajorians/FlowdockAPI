@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <stdlib.h>//For atoi
 #include "FlowdockAPI.h"
 #include "Library.h"
 
@@ -19,6 +20,7 @@ int main(int argc, char *argv[])
 {
    bool bListen = false, bGetUsers = false, bGetFlows = false;
    std::string strOrg, strFlow, strUser, strPassword, strUploadFile, strMessage;
+   int nThread = -1;
    for(int i=0; i<argc; i++)
    {
       std::string str = argv[i];
@@ -40,6 +42,9 @@ int main(int argc, char *argv[])
       if( str == "--say" )
          strMessage = argv[i+1];
 
+      if( str == "--thread" )//More like a comment
+         nThread = atoi(argv[i+1]);
+
       if( str == "--getusers" )
          bGetUsers = true;
 
@@ -53,6 +58,7 @@ int main(int argc, char *argv[])
    {
       cout << "Usage: " << argv[0] << " --org aj-org --flow main --user ajorians@gmail.com --password abc123" << endl;
       cout << "--upload file or --say message or --listen" << endl;
+      cout << "--thread 12345 is you are replying to something" << endl;
       return 0;
    }
 
@@ -90,7 +96,7 @@ int main(int argc, char *argv[])
       if( !Say )
          return 0;
 
-      Say(pFlowdock, strOrg.c_str(), strFlow.c_str(), strUser.c_str(), strPassword.c_str(), strMessage.c_str(), "", "Build_bot");
+      Say(pFlowdock, strOrg.c_str(), strFlow.c_str(), strUser.c_str(), strPassword.c_str(), strMessage.c_str(), nThread, "", "Build_bot");
    }
 
    ///

@@ -14,9 +14,9 @@ typedef int (*FlowdockFreeFunc)(FlowdockAPI* api);
 typedef int (*FlowdockSetOrgFlowFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow);
 typedef int (*FlowdockSetUsernamePasswordFunc)(FlowdockAPI api, const char* pstrUsername, const char* pstrPassword);
 
-typedef int (*FlowdockSayFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage, const char* pstrTags, const char* pstrExternalUserName);
-typedef int (*FlowdockSayOrgFlowMessageFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrMessage, const char* pstrTags, const char* pstrExternalUserName);
-typedef int (*FlowdockSayDefaultsFunc)(FlowdockAPI api, const char* pstrMessage, const char* pstrTags, const char* pstrExternalUserName);
+typedef int (*FlowdockSayFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName);
+typedef int (*FlowdockSayOrgFlowMessageFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName);
+typedef int (*FlowdockSayDefaultsFunc)(FlowdockAPI api, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName);
 
 typedef int (*FlowdockUploadFileFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrFilePath);
 typedef int (*FlowdockUploadOrgFlowFileFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrFilePath);
@@ -48,9 +48,9 @@ FLOWDOCK_EXTERN int FlowdockFree(FlowdockAPI* api);
 FLOWDOCK_EXTERN int FlowdockSetOrgFlow(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow);
 FLOWDOCK_EXTERN int FlowdockSetUsernamePassword(FlowdockAPI api, const char* pstrUsername, const char* pstrPassword);
 
-FLOWDOCK_EXTERN int FlowdockSay(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage, const char* pstrTags, const char* pstrExternalUserName);
-FLOWDOCK_EXTERN int FlowdockSayOrgFlowMessage(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrMessage, const char* pstrTags, const char* pstrExternalUserName);
-FLOWDOCK_EXTERN int FlowdockSayDefaults(FlowdockAPI api, const char* pstrMessage, const char* pstrTags, const char* pstrExternalUserName);
+FLOWDOCK_EXTERN int FlowdockSay(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName);
+FLOWDOCK_EXTERN int FlowdockSayOrgFlowMessage(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName);
+FLOWDOCK_EXTERN int FlowdockSayDefaults(FlowdockAPI api, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName);
 
 FLOWDOCK_EXTERN int FlowdockUploadFile(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrFilePath);
 FLOWDOCK_EXTERN int FlowdockUploadOrgFlowFile(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrFilePath);
