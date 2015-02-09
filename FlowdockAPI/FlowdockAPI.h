@@ -9,7 +9,7 @@
 
 typedef void*	FlowdockAPI;
 
-typedef int (*FlowdockCreateFunc)(FlowdockAPI* api);
+typedef int (*FlowdockCreateFunc)(FlowdockAPI* api, int nVerbose);
 typedef int (*FlowdockFreeFunc)(FlowdockAPI* api);
 typedef int (*FlowdockSetOrgFlowFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow);
 typedef int (*FlowdockSetUsernamePasswordFunc)(FlowdockAPI api, const char* pstrUsername, const char* pstrPassword);
@@ -44,7 +44,7 @@ typedef int (*FlowdockGetNicknameForUserFunc)(FlowdockAPI api, char* pstrUser, c
 
 typedef int (*FlowdockGetFlowByIDFunc)(FlowdockAPI api, char* pstrID, char* pstrFlowName, int& nSizeOfFlowName);
 
-FLOWDOCK_EXTERN int FlowdockCreate(FlowdockAPI* api);
+FLOWDOCK_EXTERN int FlowdockCreate(FlowdockAPI* api, int nVerbose);
 FLOWDOCK_EXTERN int FlowdockFree(FlowdockAPI* api);
 FLOWDOCK_EXTERN int FlowdockSetOrgFlow(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow);
 FLOWDOCK_EXTERN int FlowdockSetUsernamePassword(FlowdockAPI api, const char* pstrUsername, const char* pstrPassword);

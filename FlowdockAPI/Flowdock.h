@@ -14,7 +14,7 @@ class Flow;
 class Flowdock
 {
 public:
-   Flowdock();
+   Flowdock(bool bVerbose);
    ~Flowdock();
 
    bool SetOrgFlow(const std::string& strOrg, const std::string& strFlow);
@@ -82,6 +82,8 @@ protected:
 
    std::vector<User*> m_apUsers;
    std::vector<Flow*> m_apFlows;
+
+   bool m_bVerbose;
 };
 
 

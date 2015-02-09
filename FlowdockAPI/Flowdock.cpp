@@ -41,9 +41,9 @@ using namespace std;
 #define strcasecmp _stricmp
 #endif
 
-FLOWDOCK_EXTERN int FlowdockCreate(FlowdockAPI* api)
+FLOWDOCK_EXTERN int FlowdockCreate(FlowdockAPI* api, int nVerbose)
 {
-   *api = new Flowdock;
+   *api = new Flowdock(nVerbose==1);
 
    return 0;
 }
@@ -292,13 +292,13 @@ FLOWDOCK_EXTERN int FlowdockGetFlowByID(FlowdockAPI api, char* pstrID, char* pst
    return strFlowName.size()>0 ? 1 : 0;
 }
 
-Flowdock::Flowdock()
+Flowdock::Flowdock(bool bVerbose)
 :
 #ifdef WIN32
    m_mutexListen(PTHREAD_MUTEX_INITIALIZER),
    m_mutexResponse(PTHREAD_MUTEX_INITIALIZER),
 #endif
-   m_bExit(false), m_bListening(false)
+   m_bExit(false), m_bListening(false), m_bVerbose(bVerbose)
 {
    pthread_mutex_init(&m_mutexListen, NULL);
    pthread_mutex_init(&m_mutexResponse, NULL);
@@ -835,6 +835,10 @@ using namespace std;
 
 void Flowdock::ReceivedResponse(const std::string& strListenResponse)
 {
+   if( m_bVerbose )
+   {
+      cout << "Received response: " << strListenResponse << endl;
+   }
    ListenResponse* pResponse = ListenResponse::Create(strListenResponse);
    if( pResponse != NULL )
    {

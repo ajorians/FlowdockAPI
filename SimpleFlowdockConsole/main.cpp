@@ -18,7 +18,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-   bool bListen = false, bGetUsers = false, bGetFlows = false;
+   bool bListen = false, bVerbose = false, bGetUsers = false, bGetFlows = false;
    std::string strOrg, strFlow, strUser, strPassword, strUploadFile, strMessage;
    int nThread = -1;
    for(int i=0; i<argc; i++)
@@ -53,6 +53,9 @@ int main(int argc, char *argv[])
 
       if( str == "--listen" )
          bListen = true;
+
+      if( str == "--verbose" )
+         bVerbose = true;
    }
    if( argc < 2 || strOrg.length() == 0 || strFlow.length() == 0 || strUser.length() == 0 || strPassword.length() == 0 )
    {
@@ -90,7 +93,7 @@ int main(int argc, char *argv[])
       return 0;
 
    FlowdockAPI pFlowdock = NULL;
-   CreateAPI(&pFlowdock);
+   CreateAPI(&pFlowdock, bVerbose?1:0);
 
    ///
 
