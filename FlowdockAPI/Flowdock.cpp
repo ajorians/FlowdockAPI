@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <curl/curl.h>
+
 #ifndef WIN32
 #include <string.h>//?? TODO: Find out why including this?
 #include <unistd.h>//For usleep
@@ -389,7 +391,9 @@ bool Flowdock::Say(const std::string& strOrg,
    curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
    std::string strUserPass = strUsername + ":" + strPassword;
    curl_easy_setopt(curl, CURLOPT_USERPWD, strUserPass.c_str());
+#ifdef CURL_VERBOSE_OUTPUT
    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+#endif
 
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
@@ -500,7 +504,9 @@ bool Flowdock::UploadFile(const std::string& strOrg, const std::string& strFlow,
    curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
    std::string strUserPass = strUsername + ":" + strPassword;
    curl_easy_setopt(curl, CURLOPT_USERPWD, strUserPass.c_str());
+#ifdef CURL_VERBOSE_OUTPUT
    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+#endif
 
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
@@ -794,7 +800,9 @@ void Flowdock::ListenWorker()
       curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
       std::string strUserPass = m_strListenUsername + ":" + m_strListenPassword;
       curl_easy_setopt(curl, CURLOPT_USERPWD, strUserPass.c_str());
+#ifdef CURL_VERBOSE_OUTPUT
       curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+#endif
 
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
@@ -844,7 +852,7 @@ void Flowdock::ReceivedResponse(const std::string& strListenResponse)
    {
       //It is possible to get messages from the same user that sent the message.
       //Lets eliminate them here
-      bool bDropMessage = true;
+      bool bDropMessage = false;
       for(std::vector<User*>::size_type i=0; i<m_apUsers.size(); i++) {
          User* pUser = m_apUsers[i];
 

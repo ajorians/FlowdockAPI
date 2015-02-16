@@ -1,0 +1,8 @@
+#ifndef FLOWDOCKAPI_DEFINES_H
+#define FLOWDOCKAPI_DEFINES_H
+
+#if 0
+#define CURL_VERBOSE_OUTPUT
+#endif
+
+#endif

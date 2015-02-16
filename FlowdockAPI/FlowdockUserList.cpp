@@ -2,6 +2,7 @@
 
 #include "UserResponse.h"
 #include <curl/curl.h>
+#include "Defines.h"
 #include "User.h"
 
 FlowdockUserList::FlowdockUserList(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword)
@@ -24,7 +25,9 @@ FlowdockUserList::FlowdockUserList(const std::string& strOrg, const std::string&
    curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
    std::string strUserPass = strUsername + ":" + strPassword;
    curl_easy_setopt(curl, CURLOPT_USERPWD, strUserPass.c_str());
+#ifdef CURL_VERBOSE_OUTPUT
    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+#endif
 
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);

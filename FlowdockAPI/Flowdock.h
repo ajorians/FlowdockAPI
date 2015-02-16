@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <vector>
 #include <string>
-#include <curl/curl.h>
+//#include <curl/curl.h>
 #include "FlowdockAPI.h"
 
 class ListenResponse;
