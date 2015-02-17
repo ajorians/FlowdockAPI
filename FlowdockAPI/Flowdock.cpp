@@ -859,6 +859,7 @@ void Flowdock::ReceivedResponse(const std::string& strListenResponse)
          if( strcasecmp(pUser->GetIDString().c_str(), pResponse->GetUser().c_str()) == 0 ) {
             bDropMessage = false;//Yep we account for the user.  But if it is the bot whom posted the mssage
             //it will need to be dropped.
+            assert(!m_strDefaultUsername.empty());
             if( strcasecmp(pUser->GetEMail().c_str(), m_strDefaultUsername.c_str()) == 0 )
                bDropMessage = true;
          }
