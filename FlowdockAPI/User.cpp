@@ -100,22 +100,24 @@ User* User::Create(const std::string& strMessage)
    bool bDisabled = root["disabled"]->AsBool();
 
    //Last_activity
-   if( root.find("last_activity") == root.end() || !root["last_activity"]->IsNumber() )
-      return NULL;
+   time_t timeLastActivity = 0;
+   if( root.find("last_activity") != root.end() && root["last_activity"]->IsNumber() )
+   {
+      double dLastActivity = root["last_activity"]->AsNumber();
 
-   double dLastActivity = root["last_activity"]->AsNumber();
-
-   double dSecondsLastActivity = dLastActivity/1000;
-   time_t timeLastActivity = dSecondsLastActivity;
+      double dSecondsLastActivity = dLastActivity/1000;
+      timeLastActivity = dSecondsLastActivity;
+   }
 
    //Sent
-   if( root.find("last_ping") == root.end() || !root["last_ping"]->IsNumber() )
-      return NULL;
+   time_t timeLastPing = 0;
+   if( root.find("last_ping") != root.end() && root["last_ping"]->IsNumber() )
+   {
+      double dLastPing = root["last_ping"]->AsNumber();
 
-   double dLastPing = root["last_ping"]->AsNumber();
-
-   double dSecondsLastPing = dLastPing/1000;
-   time_t timeLastPing = dLastPing;
+      double dSecondsLastPing = dLastPing/1000;
+      timeLastPing = dLastPing;
+   }
 
    //in_flow
    if( root.find("in_flow") == root.end() || !root["in_flow"]->IsBool() )
