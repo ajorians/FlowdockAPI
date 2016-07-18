@@ -97,6 +97,14 @@ FLOWDOCK_EXTERN int FlowdockSayDefaults(FlowdockAPI api, const char* pstrMessage
    return pFlowdock->Say(strMessage, nCommentTo, strTags, strExternalUsername) ? 1 : 0;
 }
 
+FLOWDOCK_EXTERN int FlowdockTag( FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, int nCommentTo, const char* pstrTags )
+{
+   std::string strOrg( pstrOrg ), strFlow( pstrFlow ), strUsername( pstrUsername ), strPassword( pstrPassword );
+   std::string strTags( pstrTags );
+   Flowdock* pFlowdock = (Flowdock*)api;
+   return pFlowdock->Tag( strOrg, strFlow, strUsername, strPassword, nCommentTo, strTags ) ? 1 : 0;
+}
+
 FLOWDOCK_EXTERN int FlowdockUploadFile(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrFilePath)
 {
    std::string strOrg(pstrOrg), strFlow(pstrFlow), strUsername(pstrUsername), strPassword(pstrPassword), strFilePath(pstrFilePath);
@@ -465,6 +473,94 @@ bool Flowdock::Say(const std::string& strMessage, int nCommentTo,
    if( m_strDefaultOrg.empty() || m_strDefaultFlow.empty() ||m_strDefaultUsername.empty() || m_strDefaultPassword.empty() )
       return false;
    return Say(m_strDefaultOrg, m_strDefaultFlow, m_strDefaultUsername, m_strListenPassword, strMessage, nCommentTo, strTagsCommaSeparated, strExternalName);
+}
+
+bool Flowdock::Tag( const std::string& strOrg, const std::string& strFlow, const std::string& strUserName, const std::string& strPassword, int nCommentTo, const std::vector<std::string>& arrstrTags )
+{
+   CURL *curl;
+   CURLcode res;
+
+   std::string strURL = "https://api.flowdock.com/flows/";
+   strURL += strOrg;
+   strURL += "/";
+   strURL += strFlow;
+   strURL += "/messages";
+   if ( nCommentTo != -1 )
+   {
+      strURL += "/" + IntToString( nCommentTo );
+   }
+
+   curl = curl_easy_init();
+   if ( !curl )
+      return false;
+
+   curl_easy_setopt( curl, CURLOPT_URL, strURL.c_str() );
+
+   std::string ctype_header = "Content-Type: application/json";
+
+   JSONObjects objs;
+
+   JSONArray jsonTags;
+   for ( std::vector<std::string>::size_type i = 0; i < arrstrTags.size(); i++ )
+   {
+      jsonTags.push_back( new JSON( arrstrTags[i] ) );
+   }
+   if ( jsonTags.size() > 0 )
+      objs["tags"] = new JSON( jsonTags );
+
+   JSON json( objs );
+
+   std::string data = json.Stringify();
+
+   curl_easy_setopt( curl, CURLOPT_USERAGENT, "ajclient/0.0.1" );
+   curl_easy_setopt( curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC );
+   std::string strUserPass = strUserName + ":" + strPassword;
+   curl_easy_setopt( curl, CURLOPT_USERPWD, strUserPass.c_str() );
+#ifdef CURL_VERBOSE_OUTPUT
+   curl_easy_setopt( curl, CURLOPT_VERBOSE, 1L );
+#endif
+
+   curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0L );
+   curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 0L );
+
+   curl_easy_setopt( curl, CURLOPT_POST, 1L );
+   curl_easy_setopt( curl, CURLOPT_POSTFIELDS, data.c_str() );
+   curl_easy_setopt( curl, CURLOPT_POSTFIELDSIZE, data.size() );
+
+   curl_slist* header = NULL;
+   header = curl_slist_append( header, ctype_header.c_str() );
+   curl_easy_setopt( curl, CURLOPT_HTTPHEADER, header );
+   curl_easy_setopt( curl, CURLOPT_CUSTOMREQUEST, "PUT" );
+
+   res = curl_easy_perform( curl );
+
+   long http_code = 0;
+   curl_easy_getinfo( curl, CURLINFO_RESPONSE_CODE, &http_code );
+
+   curl_easy_cleanup( curl );
+
+   return static_cast<int>( http_code ) == 200;
+}
+
+bool Flowdock::Tag( const std::string& strOrg, const std::string& strFlow, const std::string& strUserName, const std::string& strPassword, int nCommentTo, const std::string& strTagsCommaSeparated )
+{
+   std::vector<std::string> arrTags;
+
+   size_t  start = 0, end = 0;
+
+   while ( end != string::npos )
+   {
+      end = strTagsCommaSeparated.find( ",", start );
+
+      // If at end, use length=maxLength.  Else use length=end-start.
+      arrTags.push_back( strTagsCommaSeparated.substr( start,
+         ( end == string::npos ) ? string::npos : end - start ) );
+
+      // If at end, use start=maxSize.  Else use start=end+delimiter.
+      start = ( ( end > ( string::npos - 1 ) )
+                ? string::npos : end + 1 );
+   }
+   return Tag( strOrg, strFlow, strUserName, strPassword, nCommentTo, arrTags );
 }
 
 bool Flowdock::UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strUsername, const std::string& strPassword, const std::string& strFilePath)

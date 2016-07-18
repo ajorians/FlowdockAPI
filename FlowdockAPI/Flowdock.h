@@ -25,6 +25,9 @@ public:
    bool Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage, int nCommentTo, const std::string& strTagsCommaSeparated, const std::string& strExternalName);
    bool Say(const std::string& strMessage, int nCommentTo = -1, const std::string& strTagsCommaSeparated = std::string(), const std::string& strExternalName = std::string());
 
+   bool Tag( const std::string& strOrg, const std::string& strFlow, const std::string& strUserName, const std::string& strPassword, int nCommentTo, const std::vector<std::string>& arrstrTags);
+   bool Tag( const std::string& strOrg, const std::string& strFlow, const std::string& strUserName, const std::string& strPassword, int nCommentTo, const std::string& strTagsCommaSeparated );
+
    bool UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strUserName, const std::string& strPassword, const std::string& strFilePath);
    bool UploadFile(const std::string& strOrg, const std::string& strFlow, const std::string& strFilePath);
    bool UploadFile(const std::string& strFilePath);
