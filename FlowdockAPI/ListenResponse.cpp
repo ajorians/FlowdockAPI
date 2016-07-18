@@ -41,10 +41,12 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
    
    std::string strEvent = root["event"]->AsString();
    ListenEvent eEvent = Message;
-   if( strEvent == "activity.user" )
+   if ( strEvent == "activity.user" )
       eEvent = Activity_User;
-   if( strEvent == "comment" )
+   else if ( strEvent == "comment" )
       eEvent = Comment;
+   else if ( strEvent == "tag-change" )
+      eEvent = Tag_Change;
 
    //Tags
    if( root.find("tags") == root.end() || !root["tags"]->IsArray() )
@@ -107,6 +109,14 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
       JSON* pContent = root["content"];
       if( pContent->HasChild("text") && pContent->Child("text")->IsString() ) {
          strContent = pContent->Child("text")->AsString();
+      }
+   }
+   else if ( eEvent == Tag_Change && root.find( "content" ) != root.end() && root["content"]->IsObject() )
+   {
+      JSON* pContent = root["content"];
+      if ( pContent->HasChild( "message" ) && pContent->Child( "message" )->AsNumber() )
+      {
+         dID = pContent->Child( "message" )->AsNumber();
       }
    }
 

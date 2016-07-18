@@ -9,7 +9,8 @@ enum ListenEvent
 {
    Message,
    Comment,//These are the thread response messages
-   Activity_User
+   Activity_User,
+   Tag_Change
 };
 
 class ListenResponse
