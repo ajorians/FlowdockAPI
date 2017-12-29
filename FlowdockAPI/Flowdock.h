@@ -1,7 +1,12 @@
 #ifndef FLOWDOCKAPI_FLOWDOCK_H
 #define FLOWDOCKAPI_FLOWDOCK_H
 
+#ifdef USE_PTHREADS
 #include <pthread.h>
+#else
+#include <thread>
+#include <mutex>
+#endif
 #include <vector>
 #include <string>
 //#include <curl/curl.h>
@@ -67,8 +72,13 @@ protected:
    std::string m_strDefaultUsername;
    std::string m_strDefaultPassword;
 
+#ifdef USE_PTHREADS
    pthread_t m_threadListen;
    pthread_mutex_t m_mutexListen;
+#else
+   std::thread m_threadListen;
+   std::mutex m_mutexListen;
+#endif
    volatile bool m_bExit;
    volatile bool m_bListening;
    std::string m_strListenUsername;
@@ -80,7 +90,11 @@ protected:
    };
    std::vector<OrgFlowPair> m_aListenOrgFlows;
 
+#ifdef USE_PTHREADS
    mutable pthread_mutex_t m_mutexResponse;
+#else
+   mutable std::mutex m_mutexResponse;
+#endif
    std::vector<ListenResponse*> m_apResponses;
 
    std::vector<User*> m_apUsers;
