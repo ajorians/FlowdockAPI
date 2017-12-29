@@ -1,0 +1,2 @@
+Robocopy /v "C:\Windows\System32" "C:\Git\SimpleFlowdockBot\Build\FlowdockAPI\SimpleFlowdockConsole\Debug" "libcrypto-1_1-x64.dll"
+Robocopy /v "C:\Windows\System32" "C:\Git\SimpleFlowdockBot\Build\FlowdockAPI\SimpleFlowdockConsole\Debug" "libssl-1_1-x64.dll"

@@ -42,3 +42,10 @@ INCLUDE_DIRECTORIES(SimpleFlowdockConsole .. ../FlowdockAPI)
 IF(WIN32)
    SET_TARGET_PROPERTIES(SimpleFlowdockConsole PROPERTIES COMPILE_FLAGS /Zc:wchar_t-)
 ENDIF(WIN32)
+
+IF(WIN32)
+   #ADD_CUSTOM_COMMAND(TARGET SimpleFlowdockConsole POST_BUILD
+   #   COMMAND ${PROJECT_SOURCE_DIR}/CopySSLFiles.bat COMMENT "Copy SSL DLLs" )
+   ADD_CUSTOM_COMMAND(TARGET SimpleFlowdockConsole POST_BUILD
+      COMMAND xcopy /f /y \"$<TARGET_FILE:libcurl>\" \"$(Outdir)\" COMMENT "Curl" )
+ENDIF(WIN32)
