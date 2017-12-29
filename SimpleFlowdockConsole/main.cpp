@@ -71,7 +71,11 @@ int main(int argc, char *argv[])
 
    std::string strPath;
 #ifdef WIN32
-   strPath = "..\\..\\FlowdockAPI\\Debug\\FlowdockAPI.dll";
+#ifdef _DEBUG
+   strPath = "..\\..\\FlowdockAPI\\Debug\\FlowdockAPI-d.dll";
+#else
+   strPath = "..\\..\\FlowdockAPI\\Release\\FlowdockAPI.dll";
+#endif
 #else
    char path[PATH_MAX] = "/proc/self/exe";
    char dest[PATH_MAX];

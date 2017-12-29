@@ -304,15 +304,19 @@ FLOWDOCK_EXTERN int FlowdockGetFlowByID(FlowdockAPI api, char* pstrID, char* pst
 
 Flowdock::Flowdock(bool bVerbose)
 :
+#ifdef USE_PTHREADS
 #ifdef WIN32
    m_mutexListen(PTHREAD_MUTEX_INITIALIZER),
    m_mutexResponse(PTHREAD_MUTEX_INITIALIZER),
 #endif
+#endif
    m_bExit(false), m_bListening(false), m_bVerbose(bVerbose)
 {
+#ifdef USE_PTHREADS
    pthread_mutex_init(&m_mutexListen, NULL);
    pthread_mutex_init(&m_mutexResponse, NULL);
    m_threadListen = pthread_self();
+#endif
    curl_global_init(CURL_GLOBAL_ALL);
 }
 
@@ -655,11 +659,23 @@ bool Flowdock::StopListening()
    if( !IsListening() )//Can't stop if not running
       return false;
 
+#ifdef USE_PTHREADS
    pthread_mutex_lock( &m_mutexListen );
+#else
+   m_mutexListen.lock();
+#endif
    m_bExit = true;
+#ifdef USE_PTHREADS
    pthread_mutex_unlock( &m_mutexListen );
+#else
+   m_mutexListen.unlock();
+#endif
 
+#ifdef USE_PTHREADS
    pthread_join( m_threadListen, NULL);
+#else
+   m_threadListen.join();
+#endif
    return true;
 }
 
@@ -693,7 +709,12 @@ bool Flowdock::StartListening(const std::string& strUserName, const std::string&
    m_strListenUsername = strUserName;
    m_strListenPassword = strPassword;
 
+#ifdef USE_PTHREADS
    int iRet = pthread_create( &m_threadListen, NULL, Flowdock::ListenThread, (void*)this);
+#else
+   std::thread t(Flowdock::ListenThread, (void*)this);
+   m_threadListen = std::move(t);
+#endif
    return true;
 }
 
@@ -708,72 +729,143 @@ bool Flowdock::StartListening()
 int Flowdock::GetListenMessagesCount() const
 {
    int nCount = 0;
+#ifdef USE_PTHREADS
    pthread_mutex_lock( &m_mutexResponse );
+#else
+   m_mutexResponse.lock();
+#endif
+
    nCount = m_apResponses.size();
+
+#ifdef USE_PTHREADS
    pthread_mutex_unlock( &m_mutexResponse );
+#else
+   m_mutexResponse.unlock();
+#endif
    return nCount;
 }
 
 int Flowdock::GetListenMessageType(int nIndex) const
 {
    int nRet = -1;
-   pthread_mutex_lock( &m_mutexResponse );
+#ifdef USE_PTHREADS
+   pthread_mutex_lock(&m_mutexResponse);
+#else
+   m_mutexResponse.lock();
+#endif
+
    assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
    ListenResponse* pResponse = m_apResponses[nIndex];
    nRet = pResponse->GetEvent();
-   pthread_mutex_unlock( &m_mutexResponse );
+
+#ifdef USE_PTHREADS
+   pthread_mutex_unlock(&m_mutexResponse);
+#else
+   m_mutexResponse.unlock();
+#endif
+
    return nRet;
 }
 
 std::string Flowdock::GetListenMessageContent(int nIndex) const
 {
    std::string strRet;
-   pthread_mutex_lock( &m_mutexResponse );
+#ifdef USE_PTHREADS
+   pthread_mutex_lock(&m_mutexResponse);
+#else
+   m_mutexResponse.lock();
+#endif
+
    assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
    ListenResponse* pResponse = m_apResponses[nIndex];
    strRet = pResponse->GetContent();
-   pthread_mutex_unlock( &m_mutexResponse );
+
+#ifdef USE_PTHREADS
+   pthread_mutex_unlock(&m_mutexResponse);
+#else
+   m_mutexResponse.unlock();
+#endif
    return strRet;
 }
 
 std::string Flowdock::GetListenMessageUser(int nIndex) const
 {
    std::string strRet;
-   pthread_mutex_lock( &m_mutexResponse );
+#ifdef USE_PTHREADS
+   pthread_mutex_lock(&m_mutexResponse);
+#else
+   m_mutexResponse.lock();
+#endif
+
    assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
    ListenResponse* pResponse = m_apResponses[nIndex];
    strRet = pResponse->GetUser();
-   pthread_mutex_unlock( &m_mutexResponse );
+
+#ifdef USE_PTHREADS
+   pthread_mutex_unlock(&m_mutexResponse);
+#else
+   m_mutexResponse.unlock();
+#endif
    return strRet;
 }
 
 std::string Flowdock::GetListenMessageFlow(int nIndex) const
 {
    std::string strRet;
-   pthread_mutex_lock( &m_mutexResponse );
+#ifdef USE_PTHREADS
+   pthread_mutex_lock(&m_mutexResponse);
+#else
+   m_mutexResponse.lock();
+#endif
+
    assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
    ListenResponse* pResponse = m_apResponses[nIndex];
    strRet = pResponse->GetFlow();
-   pthread_mutex_unlock( &m_mutexResponse );
+
+#ifdef USE_PTHREADS
+   pthread_mutex_unlock(&m_mutexResponse);
+#else
+   m_mutexResponse.unlock();
+#endif
    return strRet;
 }
 
 int Flowdock::GetListenMessageID(int nIndex) const
 {
    int nRet = -1;
-   pthread_mutex_lock( &m_mutexResponse );
+#ifdef USE_PTHREADS
+   pthread_mutex_lock(&m_mutexResponse);
+#else
+   m_mutexResponse.lock();
+#endif
+
    assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
    ListenResponse* pResponse = m_apResponses[nIndex];
    nRet = pResponse->GetMessageID();
-   pthread_mutex_unlock( &m_mutexResponse );
+
+#ifdef USE_PTHREADS
+   pthread_mutex_unlock(&m_mutexResponse);
+#else
+   m_mutexResponse.unlock();
+#endif
    return nRet;
 }
 
 bool Flowdock::RemoveListenMessage(int nIndex)
 {
-   pthread_mutex_lock( &m_mutexResponse );
+#ifdef USE_PTHREADS
+   pthread_mutex_lock(&m_mutexResponse);
+#else
+   m_mutexResponse.lock();
+#endif
+
    m_apResponses.erase(m_apResponses.begin()+nIndex);
-   pthread_mutex_unlock( &m_mutexResponse );
+
+#ifdef USE_PTHREADS
+   pthread_mutex_unlock(&m_mutexResponse);
+#else
+   m_mutexResponse.unlock();
+#endif
    return true;
 }
 
@@ -966,9 +1058,17 @@ void Flowdock::ReceivedResponse(const std::string& strListenResponse)
          return;
       }
 
-      pthread_mutex_lock( &m_mutexResponse );
+#ifdef USE_PTHREADS
+      pthread_mutex_lock(&m_mutexResponse);
+#else
+      m_mutexResponse.lock();
+#endif
       m_apResponses.push_back(pResponse);
-      pthread_mutex_unlock( &m_mutexResponse );
+#ifdef USE_PTHREADS
+      pthread_mutex_unlock(&m_mutexResponse);
+#else
+      m_mutexResponse.unlock();
+#endif
    }
 }
 
