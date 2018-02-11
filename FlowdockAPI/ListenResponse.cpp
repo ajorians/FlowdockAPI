@@ -9,7 +9,7 @@ using namespace std;
 
 ListenResponse::ListenResponse(ListenEvent eEvent, const std::vector<std::string>& astrTags, const std::string& strUUID, double dID,
                   const std::string& strFlow, const std::string& strContent, time_t timeSent, const std::string& strApp,
-                  const std::vector<std::string>& astrAttachments, const std::string& strUser)
+                  const std::vector<std::string>& astrAttachments, int nUser)
 : m_eEvent(eEvent),
 m_astrTags(astrTags),
 m_strUUID(strUUID),
@@ -19,7 +19,7 @@ m_strContent(strContent),
 m_timeSent(timeSent),
 m_strApp(strApp),
 m_astrAttachments(astrAttachments),
-m_strUser(strUser)
+m_nUser(nUser)
 {
 }
 
@@ -182,6 +182,7 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
       return NULL;
 
    std::string strUser = root["user"]->AsString();
+   int nUser = std::stoi(strUser);
 
    delete(value);
 
@@ -195,7 +196,7 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
       timeSent,
       strApp,
       std::vector<std::string>(),//Attachments
-      strUser);
+      nUser);
 
    return pResponse;
 }
@@ -210,9 +211,9 @@ std::string ListenResponse::GetContent() const
    return m_strContent;
 }
 
-std::string ListenResponse::GetUser() const
+int ListenResponse::GetUser() const
 {
-   return m_strUser;
+   return m_nUser;
 }
 
 std::string ListenResponse::GetFlow() const

@@ -20,14 +20,14 @@ public:
 
    ListenEvent GetEvent() const;
    std::string GetContent() const;
-   std::string GetUser() const;
+   int GetUser() const;
    std::string GetFlow() const;
    int GetMessageID() const;
 
 protected:
    ListenResponse(ListenEvent eEvent, const std::vector<std::string>& astrTags, const std::string& strUUID, double dID,
                   const std::string& strFlow, const std::string& strContent, time_t timeSent, const std::string& strApp,
-                  const std::vector<std::string>& astrAttachments, const std::string& strUser);
+                  const std::vector<std::string>& astrAttachments, int nUser);
 
 protected:
    ListenEvent m_eEvent;
@@ -40,7 +40,7 @@ protected:
    time_t m_timeSent;
    std::string m_strApp;
    std::vector<std::string> m_astrAttachments;
-   std::string m_strUser;
+   int m_nUser;
 };
 
 #endif

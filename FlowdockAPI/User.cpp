@@ -27,12 +27,9 @@ User::~User()
 
 }
 
-std::string User::GetIDString() const
+int User::GetID() const
 {
-   std::stringstream stream;
-   stream << m_nID;
-   std::string strRet = stream.str();
-   return strRet;
+   return m_nID;
 }
 
 std::string User::GetNickname() const
