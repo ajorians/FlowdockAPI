@@ -213,21 +213,13 @@ FLOWDOCK_EXTERN int FlowdockGetMessageContent(FlowdockAPI api, int nIndex, char*
    return strMessageContent.size()>0 ? 1 : 0;
 }
 
-FLOWDOCK_EXTERN int FlowdockGetMessageUser(FlowdockAPI api, int nIndex, char* pstrMessageUser, int& nSizeOfMessageUser)
+FLOWDOCK_EXTERN int FlowdockGetMessageUser(FlowdockAPI api, int nIndex, int& nMessageUser)
 {
    Flowdock* pFlowdock = (Flowdock*)api;
 
-   std::string strMessageUser = pFlowdock->GetListenMessageUser(nIndex);
-   if( nSizeOfMessageUser > 0 )
-   {
-      memcpy(pstrMessageUser, strMessageUser.c_str(), nSizeOfMessageUser + 1);
-   }
-   else
-   {
-      nSizeOfMessageUser = strMessageUser.size();
-   }
+   nMessageUser = pFlowdock->GetListenMessageUser(nIndex);
 
-   return strMessageUser.size()>0 ? 1 : 0;
+   return nMessageUser != 0;
 }
 
 FLOWDOCK_EXTERN int FlowdockGetMessageFlow(FlowdockAPI api, int nIndex, char* pstrMessageFlow, int& nSizeOfMessageFlow)
@@ -262,13 +254,12 @@ FLOWDOCK_EXTERN int FlowdockRemoveListenMessage(FlowdockAPI api, int nIndex)
    return pFlowdock->RemoveListenMessage(nIndex) ? 1 : 0;
 }
 
-FLOWDOCK_EXTERN int FlowdockGetNicknameForUser(FlowdockAPI api, char* pstrUser, char* pstrNickname, int& nSizeOfNickname)
+FLOWDOCK_EXTERN int FlowdockGetNicknameForUser(FlowdockAPI api, int nUser, char* pstrNickname, int& nSizeOfNickname)
 {
    Flowdock* pFlowdock = (Flowdock*)api;
 
-   std::string strUser(pstrUser);
    std::string strNickname;
-   bool bOK = pFlowdock->GetNicknameForUser(strUser, strNickname);
+   bool bOK = pFlowdock->GetNicknameForUser(nUser, strNickname);
    if( !bOK ) return 0;
    if( nSizeOfNickname > 0 )
    {
@@ -788,9 +779,9 @@ std::string Flowdock::GetListenMessageContent(int nIndex) const
    return strRet;
 }
 
-std::string Flowdock::GetListenMessageUser(int nIndex) const
+int Flowdock::GetListenMessageUser(int nIndex) const
 {
-   std::string strRet;
+   int nRet = 0;
 #ifdef USE_PTHREADS
    pthread_mutex_lock(&m_mutexResponse);
 #else
@@ -799,14 +790,14 @@ std::string Flowdock::GetListenMessageUser(int nIndex) const
 
    assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
    ListenResponse* pResponse = m_apResponses[nIndex];
-   strRet = pResponse->GetUser();
+   nRet = pResponse->GetUser();
 
 #ifdef USE_PTHREADS
    pthread_mutex_unlock(&m_mutexResponse);
 #else
    m_mutexResponse.unlock();
 #endif
-   return strRet;
+   return nRet;
 }
 
 std::string Flowdock::GetListenMessageFlow(int nIndex) const
@@ -869,7 +860,7 @@ bool Flowdock::RemoveListenMessage(int nIndex)
    return true;
 }
 
-bool Flowdock::GetNicknameForUser(const std::string& strUser, std::string& strNickname) const
+bool Flowdock::GetNicknameForUser(int nUser, std::string& strNickname) const
 {
    if( m_apUsers.empty() )
       return false;
@@ -877,7 +868,7 @@ bool Flowdock::GetNicknameForUser(const std::string& strUser, std::string& strNi
    for(std::vector<User*>::const_iterator it = m_apUsers.begin(); it != m_apUsers.end(); it++)
    {
       const User* pUser = *it;
-      if( pUser->GetIDString() == strUser )
+      if( pUser->GetID() == nUser )
       {
          strNickname = pUser->GetNickname();
          return true;
@@ -1044,13 +1035,17 @@ void Flowdock::ReceivedResponse(const std::string& strListenResponse)
       for(std::vector<User*>::size_type i=0; i<m_apUsers.size(); i++) {
          User* pUser = m_apUsers[i];
 
-         if( strcasecmp(pUser->GetIDString().c_str(), pResponse->GetUser().c_str()) == 0 ) {
-            bDropMessage = false;//Yep we account for the user.  But if it is the bot whom posted the mssage
+         if( pUser->GetID() == pResponse->GetUser() ) {
+            bDropMessage = true;//Yep we account for the user.  But if it is the bot whom posted the mssage
             //it will need to be dropped.
             assert(!m_strDefaultUsername.empty());
-            if( strcasecmp(pUser->GetEMail().c_str(), m_strDefaultUsername.c_str()) == 0 )
-               bDropMessage = true;
          }
+         if( strcasecmp(pUser->GetEMail().c_str(), m_strDefaultUsername.c_str()) == 0 ) {
+            bDropMessage = true;
+         }
+      }
+      if( pResponse->GetUser() == 311366 ) {//This is ReviewBot.  Gonna try this :)
+         bDropMessage = true;
       }
       if( bDropMessage ) {
          //Possible e-mail could differ with case

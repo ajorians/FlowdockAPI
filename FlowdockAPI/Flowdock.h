@@ -51,12 +51,12 @@ public:
    int GetListenMessagesCount() const;
    int GetListenMessageType(int nIndex) const;
    std::string GetListenMessageContent(int nIndex) const;
-   std::string GetListenMessageUser(int nIndex) const;
+   int GetListenMessageUser(int nIndex) const;
    std::string GetListenMessageFlow(int nIndex) const;
    int GetListenMessageID(int nIndex) const;
    bool RemoveListenMessage(int nIndex);
 
-   bool GetNicknameForUser(const std::string& strUser, std::string& strNickname) const;
+   bool GetNicknameForUser(int nUser, std::string& strNickname) const;
    bool GetFlowNameByID(const std::string& strID, std::string& strFlowname) const;
 
 protected:
