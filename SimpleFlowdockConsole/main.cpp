@@ -16,6 +16,11 @@
 
 using namespace std;
 
+void Listen_Callback(FlowMessage message, void* pUserData)
+{
+
+}
+
 int main(int argc, char *argv[])
 {
    bool bListen = false, bVerbose = false, bGetUsers = false, bGetFlows = false;
@@ -153,87 +158,26 @@ int main(int argc, char *argv[])
 
       AddListenFlow(pFlowdock, strOrg.c_str(), strFlow.c_str());
 
+      FlowdockAddListenCallbackFunc AddListen = (FlowdockAddListenCallbackFunc)library.Resolve("FlowdockAddListen");
+      if (!AddListen )
+         return 0;
+
+      AddListen(pFlowdock, Listen_Callback, NULL);
+
       FlowdockStartListeningFunc StartListening = (FlowdockStartListeningFunc)library.Resolve("FlowdockStartListening");
       if( !StartListening )
          return 0;
 
       StartListening(pFlowdock, strUser.c_str(), strPassword.c_str());
       //Sleep while it is listening
-      while(true)
-      //for(int i=0; i<10; i++)
+      while (true)
+         //for(int i=0; i<10; i++)
       {
 #ifdef _WIN32
          Sleep(1000);//1 second
 #else
-         usleep(1000*1000);
+         usleep(1000 * 1000);
 #endif
-
-         FlowdockGetListenMessageCountFunc GetListenMessagesCount = (FlowdockGetListenMessageCountFunc)library.Resolve("FlowdockGetListenMessageCount");
-         if( !GetListenMessagesCount )
-            return 0;
-
-         while(true) {
-            int nCount = GetListenMessagesCount(pFlowdock);
-            if( nCount <= 0 )
-               break;
-
-            FlowdockGetListenMessageTypeFunc GetListenMessagesType = (FlowdockGetListenMessageTypeFunc)library.Resolve("FlowdockGetListenMessageType");
-            if( !GetListenMessagesType )
-               return 0;
-
-            int nType = GetListenMessagesType(pFlowdock, 0);
-
-            if( nType == 0 ) {
-               FlowdockGetMessageContentFunc GetMessage = (FlowdockGetMessageContentFunc)library.Resolve("FlowdockGetMessageContent");
-               if( !GetMessage )
-                  return 0;
-
-               char* pstrMessage = NULL;
-               int nSizeOfMessage = 0;
-               GetMessage(pFlowdock, 0, pstrMessage, nSizeOfMessage);
-
-               pstrMessage = new char[nSizeOfMessage + 1];
-
-               GetMessage(pFlowdock, 0, pstrMessage, nSizeOfMessage);
-
-               std::string strMessage(pstrMessage);
-
-               delete[] pstrMessage;
-               cout << "Message: " << strMessage << endl;
-
-               ///
-               FlowdockGetMessageUserFunc GetUser = (FlowdockGetMessageUserFunc)library.Resolve("FlowdockGetMessageUser");
-               if( !GetUser )
-                  return 0;
-
-               int nUser;
-               int nSizeOfUser = 0;
-               GetUser(pFlowdock, 0, nUser);
-
-               FlowdockGetNicknameForUserFunc GetNickname = (FlowdockGetNicknameForUserFunc)library.Resolve("FlowdockGetNicknameForUser");
-               if( !GetNickname )
-                  return 0;
-
-               char* pstrNickname = NULL;
-               int nSizeOfNickname = 0;
-               int nOK = GetNickname(pFlowdock, nUser, pstrNickname, nSizeOfNickname);
-               if( nOK == 1 ) {
-                  pstrNickname = new char[nSizeOfNickname + 1];
-
-                  GetNickname(pFlowdock, nUser, pstrNickname, nSizeOfNickname);
-
-                  std::string strNickname(pstrNickname);
-                  cout << "Person: " << strNickname << endl;
-                  delete[] pstrNickname;
-               }
-            }
-
-            FlowdockRemoveListenMessageFunc RemoveListenMessage = (FlowdockRemoveListenMessageFunc)library.Resolve("FlowdockRemoveListenMessage");
-            if( !RemoveListenMessage )
-               return 0;
-
-            RemoveListenMessage(pFlowdock, 0);
-         }
       }
    }
 
