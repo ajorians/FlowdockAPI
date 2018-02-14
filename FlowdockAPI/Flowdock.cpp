@@ -22,7 +22,6 @@
 #include "User.h"
 #include "FlowdockFlowList.h"
 #include "Flow.h"
-#include "FlowdockFindID.h"
 
 #include "JSON.h"
 #include "Utils.h"
@@ -862,9 +861,11 @@ void Flowdock::ReceivedResponse(const std::string& strListenResponse)
    if (pResponse != NULL)
    {
       FlowMessage message;
+      message.eEvent = pResponse->GetEvent();
       strcpy(message.Message, pResponse->GetContent().c_str());
       message.nUserId = pResponse->GetUser();
       message.nThreadId = pResponse->GetMessageID();
+
       for (int i = 0; i < m_aListenCallbacks.size(); i++)
       {
          m_aListenCallbacks[i].cb(message, m_aListenCallbacks[i].pUserData);

@@ -7,12 +7,24 @@
 #define FLOWDOCK_EXTERN extern "C"
 #endif
 
-struct FlowMessage
+enum EventType
 {
+   Message,
+   MessageEdit,
+   Comment,//These are the thread response messages
+   Activity_User,
+   Tag_Change,
+   Message_Delete,
+   Thread_Change
+};
+
+typedef struct
+{
+   EventType eEvent;
    char Message[512];
    int nUserId;
    int nThreadId;
-};
+} FlowMessage;
 
 typedef void(*FlowMessageCallback)(FlowMessage message, void* pUserData);
 

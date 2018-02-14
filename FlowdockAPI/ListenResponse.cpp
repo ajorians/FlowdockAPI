@@ -7,13 +7,14 @@
 
 using namespace std;
 
-ListenResponse::ListenResponse(ListenEvent eEvent, const std::vector<std::string>& astrTags, const std::string& strUUID, double dID,
+ListenResponse::ListenResponse(EventType eEvent, const std::string& strThreadId, const std::vector<std::string>& astrTags, const std::string& strUUID, int nID,
                   const std::string& strFlow, const std::string& strContent, time_t timeSent, const std::string& strApp,
                   const std::vector<std::string>& astrAttachments, int nUser)
 : m_eEvent(eEvent),
+m_strThreadId( strThreadId ),
 m_astrTags(astrTags),
 m_strUUID(strUUID),
-m_dID(dID),
+m_nID(nID),
 m_strFlow(strFlow),
 m_strContent(strContent),
 m_timeSent(timeSent),
@@ -25,7 +26,7 @@ m_nUser(nUser)
 
 ListenResponse* ListenResponse::Create(const std::string& strMessage)
 {
-   JSON *value = JSON::Parse(strMessage.c_str());
+   JSON *value = JSON::Parse(strMessage);
    if( value == NULL )
       return NULL;
 
@@ -35,18 +36,29 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
    JSONObjects root;
    root = value->AsObject();
 
+   //Threadid
+   std::string strThreadId;
+   if (root.find("thread_id") != root.end() && root.at("thread_id")->IsString())
+      strThreadId = root.at("thread_id")->AsString();
+
    //Event
    if( root.find("event") == root.end() || !root.at("event")->IsString() )
       return NULL;
-   
+
    std::string strEvent = root["event"]->AsString();
-   ListenEvent eEvent = Message;
+   EventType eEvent = Message;
    if ( strEvent == "activity.user" )
       eEvent = Activity_User;
    else if ( strEvent == "comment" )
       eEvent = Comment;
    else if ( strEvent == "tag-change" )
       eEvent = Tag_Change;
+   else if ( strEvent == "message-edit" )
+      eEvent = MessageEdit;
+   else if( strEvent == "message-delete" )
+      eEvent = Message_Delete;
+   else if( strEvent == "thread-change" )
+      eEvent = Thread_Change;
 
    //Tags
    if( root.find("tags") == root.end() || !root["tags"]->IsArray() )
@@ -72,7 +84,7 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
    if( root.find("id") == root.end() || !root["id"]->IsNumber() )
       return NULL;
 
-   double dID = root["id"]->AsNumber();
+   int nID = (int)root["id"]->AsNumber();
 
    if( eEvent == Comment && astrTags.size() > 0 )
    {
@@ -85,8 +97,7 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
             if( strType == "\"influx:" )
             {
                std::string strID = strTag.substr(strlen("\"influx:"), strTag.length() - strlen("\"influx:")-1/*closing quote*/);
-               int nID = atoi(strID.c_str());
-               dID = nID;
+               nID = atoi(strID.c_str());
             }
          }
       }
@@ -116,7 +127,19 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
       JSON* pContent = root["content"];
       if ( pContent->HasChild( "message" ) && pContent->Child( "message" )->AsNumber() )
       {
-         dID = pContent->Child( "message" )->AsNumber();
+         nID = pContent->Child( "message" )->AsNumber();
+      }
+   }
+   else if (eEvent == MessageEdit && root.find("content") != root.end() && root["content"]->IsObject())
+   {
+      JSON* pContent = root["content"];
+      if (pContent->HasChild("message") && pContent->Child("message")->IsNumber())
+      {
+         nID = pContent->Child("message")->AsNumber();
+      }
+      if (pContent->HasChild("updated_content") && pContent->Child("updated_content")->IsString())
+      {
+         strContent = pContent->Child("updated_content")->AsString();
       }
    }
 
@@ -188,9 +211,10 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
 
    ListenResponse* pResponse = new ListenResponse(
       eEvent,
+      strThreadId,
       astrTags,
       strUUID,
-      dID,
+      nID,
       strFlow,
       strContent,
       timeSent,
@@ -201,7 +225,7 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
    return pResponse;
 }
 
-ListenEvent ListenResponse::GetEvent() const
+EventType ListenResponse::GetEvent() const
 {
    return m_eEvent;
 }
@@ -223,5 +247,5 @@ std::string ListenResponse::GetFlow() const
 
 int ListenResponse::GetMessageID() const
 {
-   return (int)m_dID;
+   return m_nID;
 }
