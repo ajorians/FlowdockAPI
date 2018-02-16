@@ -22,7 +22,6 @@
 #include "User.h"
 #include "FlowdockFlowList.h"
 #include "Flow.h"
-#include "FlowdockFindID.h"
 
 #include "JSON.h"
 #include "Utils.h"
@@ -184,74 +183,10 @@ FLOWDOCK_EXTERN int FlowdockStartListeningDefaults(FlowdockAPI api)
    return pFlowdock->StartListening() ? 1 : 0;
 }
 
-FLOWDOCK_EXTERN int FlowdockGetListenMessageCount(FlowdockAPI api)
+FLOWDOCK_EXTERN int FlowdockAddListenCallback(FlowdockAPI api, FlowMessageCallback cb, void* pData)
 {
    Flowdock* pFlowdock = (Flowdock*)api;
-   return pFlowdock->GetListenMessagesCount();
-}
-
-FLOWDOCK_EXTERN int FlowdockGetListenMessageType(FlowdockAPI api, int nIndex)
-{
-   Flowdock* pFlowdock = (Flowdock*)api;
-   return pFlowdock->GetListenMessageType(nIndex);
-}
-
-FLOWDOCK_EXTERN int FlowdockGetMessageContent(FlowdockAPI api, int nIndex, char* pstrMessage, int& nSizeOfMessage)
-{
-   Flowdock* pFlowdock = (Flowdock*)api;
-
-   std::string strMessageContent = pFlowdock->GetListenMessageContent(nIndex);
-   if( nSizeOfMessage > 0 )
-   {
-      memcpy(pstrMessage, strMessageContent.c_str(), nSizeOfMessage + 1);
-   }
-   else
-   {
-      nSizeOfMessage = strMessageContent.size();
-   }
-
-   return strMessageContent.size()>0 ? 1 : 0;
-}
-
-FLOWDOCK_EXTERN int FlowdockGetMessageUser(FlowdockAPI api, int nIndex, int& nMessageUser)
-{
-   Flowdock* pFlowdock = (Flowdock*)api;
-
-   nMessageUser = pFlowdock->GetListenMessageUser(nIndex);
-
-   return nMessageUser != 0;
-}
-
-FLOWDOCK_EXTERN int FlowdockGetMessageFlow(FlowdockAPI api, int nIndex, char* pstrMessageFlow, int& nSizeOfMessageFlow)
-{
-   Flowdock* pFlowdock = (Flowdock*)api;
-
-   std::string strMessageFlow = pFlowdock->GetListenMessageFlow(nIndex);
-   if( nSizeOfMessageFlow > 0 )
-   {
-      memcpy(pstrMessageFlow, strMessageFlow.c_str(), nSizeOfMessageFlow + 1);
-   }
-   else
-   {
-      nSizeOfMessageFlow = strMessageFlow.size();
-   }
-
-   return strMessageFlow.size()>0 ? 1 : 0;
-}
-
-FLOWDOCK_EXTERN int FlowdockGetMessageID(FlowdockAPI api, int nIndex, int& nMessageID)
-{
-   Flowdock* pFlowdock = (Flowdock*)api;
-
-   nMessageID = pFlowdock->GetListenMessageID(nIndex);
-
-   return 1;
-}
-
-FLOWDOCK_EXTERN int FlowdockRemoveListenMessage(FlowdockAPI api, int nIndex)
-{
-   Flowdock* pFlowdock = (Flowdock*)api;
-   return pFlowdock->RemoveListenMessage(nIndex) ? 1 : 0;
+   return pFlowdock->AddListenCallback(cb, pData) ? 1 : 0;
 }
 
 FLOWDOCK_EXTERN int FlowdockGetNicknameForUser(FlowdockAPI api, int nUser, char* pstrNickname, int& nSizeOfNickname)
@@ -267,10 +202,29 @@ FLOWDOCK_EXTERN int FlowdockGetNicknameForUser(FlowdockAPI api, int nUser, char*
    }
    else
    {
-      nSizeOfNickname = strNickname.size();
+      nSizeOfNickname = (int)strNickname.size();
    }
 
    return strNickname.size()>0 ? 1 : 0;
+}
+
+FLOWDOCK_EXTERN int FlowdockGetEMailForUser(FlowdockAPI api, int nUser, char* pstrEmailAddress, int& nSizeOfEMailAddress)
+{
+   Flowdock* pFlowdock = (Flowdock*)api;
+
+   std::string strEMail;
+   bool bOK = pFlowdock->GetEmailForUser(nUser, strEMail);
+   if (!bOK) return 0;
+   if (nSizeOfEMailAddress > 0)
+   {
+      memcpy(pstrEmailAddress, strEMail.c_str(), nSizeOfEMailAddress + 1);
+   }
+   else
+   {
+      nSizeOfEMailAddress = (int)strEMail.size();
+   }
+
+   return strEMail.size()>0 ? 1 : 0;
 }
 
 FLOWDOCK_EXTERN int FlowdockGetFlowByID(FlowdockAPI api, char* pstrID, char* pstrFlowName, int& nSizeOfFlowName)
@@ -287,7 +241,7 @@ FLOWDOCK_EXTERN int FlowdockGetFlowByID(FlowdockAPI api, char* pstrID, char* pst
    }
    else
    {
-      nSizeOfFlowName = strFlowName.size();
+      nSizeOfFlowName = (int)strFlowName.size();
    }
 
    return strFlowName.size()>0 ? 1 : 0;
@@ -297,15 +251,13 @@ Flowdock::Flowdock(bool bVerbose)
 :
 #ifdef USE_PTHREADS
 #ifdef WIN32
-   m_mutexListen(PTHREAD_MUTEX_INITIALIZER),
-   m_mutexResponse(PTHREAD_MUTEX_INITIALIZER),
+   m_mutexListen(PTHREAD_MUTEX_INITIALIZER)
 #endif
 #endif
    m_bExit(false), m_bListening(false), m_bVerbose(bVerbose)
 {
 #ifdef USE_PTHREADS
    pthread_mutex_init(&m_mutexListen, NULL);
-   pthread_mutex_init(&m_mutexResponse, NULL);
    m_threadListen = pthread_self();
 #endif
    curl_global_init(CURL_GLOBAL_ALL);
@@ -314,12 +266,6 @@ Flowdock::Flowdock(bool bVerbose)
 Flowdock::~Flowdock()
 {
    StopListening();
-
-   while(m_apResponses.size())
-   {
-      delete m_apResponses[0];
-      m_apResponses.erase(m_apResponses.begin());
-   }
 
    curl_global_cleanup();
 }
@@ -679,7 +625,7 @@ bool Flowdock::AddListenFlow(const std::string& strOrg, const std::string& strFl
    orgFlow.m_strOrg = strOrg;
    orgFlow.m_strFlow = strFlow;
    //TODO: Check if org/flow already exists
-   m_aListenOrgFlows.push_back(orgFlow);;
+   m_aListenOrgFlows.push_back(orgFlow);
 
    return false;
 }
@@ -717,147 +663,13 @@ bool Flowdock::StartListening()
    return StartListening(m_strDefaultUsername, m_strDefaultPassword);
 }
 
-int Flowdock::GetListenMessagesCount() const
+bool Flowdock::AddListenCallback(FlowMessageCallback cb, void* pData)
 {
-   int nCount = 0;
-#ifdef USE_PTHREADS
-   pthread_mutex_lock( &m_mutexResponse );
-#else
-   m_mutexResponse.lock();
-#endif
-
-   nCount = m_apResponses.size();
-
-#ifdef USE_PTHREADS
-   pthread_mutex_unlock( &m_mutexResponse );
-#else
-   m_mutexResponse.unlock();
-#endif
-   return nCount;
-}
-
-int Flowdock::GetListenMessageType(int nIndex) const
-{
-   int nRet = -1;
-#ifdef USE_PTHREADS
-   pthread_mutex_lock(&m_mutexResponse);
-#else
-   m_mutexResponse.lock();
-#endif
-
-   assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
-   ListenResponse* pResponse = m_apResponses[nIndex];
-   nRet = pResponse->GetEvent();
-
-#ifdef USE_PTHREADS
-   pthread_mutex_unlock(&m_mutexResponse);
-#else
-   m_mutexResponse.unlock();
-#endif
-
-   return nRet;
-}
-
-std::string Flowdock::GetListenMessageContent(int nIndex) const
-{
-   std::string strRet;
-#ifdef USE_PTHREADS
-   pthread_mutex_lock(&m_mutexResponse);
-#else
-   m_mutexResponse.lock();
-#endif
-
-   assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
-   ListenResponse* pResponse = m_apResponses[nIndex];
-   strRet = pResponse->GetContent();
-
-#ifdef USE_PTHREADS
-   pthread_mutex_unlock(&m_mutexResponse);
-#else
-   m_mutexResponse.unlock();
-#endif
-   return strRet;
-}
-
-int Flowdock::GetListenMessageUser(int nIndex) const
-{
-   int nRet = 0;
-#ifdef USE_PTHREADS
-   pthread_mutex_lock(&m_mutexResponse);
-#else
-   m_mutexResponse.lock();
-#endif
-
-   assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
-   ListenResponse* pResponse = m_apResponses[nIndex];
-   nRet = pResponse->GetUser();
-
-#ifdef USE_PTHREADS
-   pthread_mutex_unlock(&m_mutexResponse);
-#else
-   m_mutexResponse.unlock();
-#endif
-   return nRet;
-}
-
-std::string Flowdock::GetListenMessageFlow(int nIndex) const
-{
-   std::string strRet;
-#ifdef USE_PTHREADS
-   pthread_mutex_lock(&m_mutexResponse);
-#else
-   m_mutexResponse.lock();
-#endif
-
-   assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
-   ListenResponse* pResponse = m_apResponses[nIndex];
-   strRet = pResponse->GetFlow();
-
-#ifdef USE_PTHREADS
-   pthread_mutex_unlock(&m_mutexResponse);
-#else
-   m_mutexResponse.unlock();
-#endif
-   return strRet;
-}
-
-int Flowdock::GetListenMessageID(int nIndex) const
-{
-   int nRet = -1;
-#ifdef USE_PTHREADS
-   pthread_mutex_lock(&m_mutexResponse);
-#else
-   m_mutexResponse.lock();
-#endif
-
-   assert( nIndex >= 0 && nIndex < (int)m_apResponses.size());
-   ListenResponse* pResponse = m_apResponses[nIndex];
-   nRet = pResponse->GetMessageID();
-
-#ifdef USE_PTHREADS
-   pthread_mutex_unlock(&m_mutexResponse);
-#else
-   m_mutexResponse.unlock();
-#endif
-   return nRet;
-}
-
-bool Flowdock::RemoveListenMessage(int nIndex)
-{
-#ifdef USE_PTHREADS
-   pthread_mutex_lock(&m_mutexResponse);
-#else
-   m_mutexResponse.lock();
-#endif
-
-   m_apResponses.erase(m_apResponses.begin()+nIndex);
-
-#ifdef USE_PTHREADS
-   pthread_mutex_unlock(&m_mutexResponse);
-#else
-   m_mutexResponse.unlock();
-#endif
-   return true;
+   MessageCallbackAndDataPair messageCallbackPair;
+   messageCallbackPair.cb = cb;
+   messageCallbackPair.pUserData = pData;
+   m_aListenCallbacks.push_back(messageCallbackPair);
+   return false;
 }
 
 bool Flowdock::GetNicknameForUser(int nUser, std::string& strNickname) const
@@ -871,6 +683,23 @@ bool Flowdock::GetNicknameForUser(int nUser, std::string& strNickname) const
       if( pUser->GetID() == nUser )
       {
          strNickname = pUser->GetNickname();
+         return true;
+      }
+   }
+   return false;
+}
+
+bool Flowdock::GetEmailForUser(int nUser, std::string& strEMailAddress) const
+{
+   if (m_apUsers.empty())
+      return false;
+
+   for (std::vector<User*>::const_iterator it = m_apUsers.begin(); it != m_apUsers.end(); it++)
+   {
+      const User* pUser = *it;
+      if (pUser->GetID() == nUser)
+      {
+         strEMailAddress = pUser->GetEMail();
          return true;
       }
    }
@@ -997,7 +826,11 @@ void Flowdock::ListenWorker()
       if( res == CURLE_ABORTED_BY_CALLBACK )
       {
       }
-      else if( res != 0 )
+      else if (res == CURLE_UNSUPPORTED_PROTOCOL)
+      {
+         assert(false);//SSL  Need to copy DLLS :)
+      }
+      else if (res != CURLE_OK)
       {
       }
 
@@ -1017,53 +850,47 @@ void Flowdock::ListenWorker()
    }
 }
 
-#include <iostream>
-using namespace std;
-
 void Flowdock::ReceivedResponse(const std::string& strListenResponse)
 {
    if( m_bVerbose )
    {
       cout << "Received response: " << strListenResponse << endl;
    }
+
+   if (strListenResponse == "\n\r\n")
+      return;
+
    ListenResponse* pResponse = ListenResponse::Create(strListenResponse);
-   if( pResponse != NULL )
+
+   if (pResponse != NULL)
    {
-      //It is possible to get messages from the same user that sent the message.
-      //Lets eliminate them here
-      bool bDropMessage = false;
-      for(std::vector<User*>::size_type i=0; i<m_apUsers.size(); i++) {
-         User* pUser = m_apUsers[i];
+      FlowdockMessage message;
+      message.eEvent = pResponse->GetEvent();
+      MyStrCopy(message.Message, pResponse->GetContent().c_str(), sizeof(message.Message));
+      message.nUserId = pResponse->GetUser();
+      message.nThreadId = -1;
+      message.nMessageId = pResponse->GetMessageID();
 
-         if( pUser->GetID() == pResponse->GetUser() ) {
-            bDropMessage = true;//Yep we account for the user.  But if it is the bot whom posted the mssage
-            //it will need to be dropped.
-            assert(!m_strDefaultUsername.empty());
-         }
-         if( strcasecmp(pUser->GetEMail().c_str(), m_strDefaultUsername.c_str()) == 0 ) {
-            bDropMessage = true;
-         }
+      message.bAdded = pResponse->IsAdding();
+      std::vector<std::string> astrAddedTags = pResponse->GetAddedTags();
+      std::vector<std::string> astrRemovedTags = pResponse->GetRemovedTags();
+      message.nAddedTags = (int)astrAddedTags.size();
+      message.nRemovedTags = (int)astrRemovedTags.size();
+      for (int i = 0; i < message.nAddedTags; i++)
+      {
+         MyStrCopy(message.AddedTags[i], astrAddedTags[i].c_str(), 128);
       }
-      if( pResponse->GetUser() == 311366 ) {//This is ReviewBot.  Gonna try this :)
-         bDropMessage = true;
-      }
-      if( bDropMessage ) {
-         //Possible e-mail could differ with case
-         delete pResponse;
-         return;
+      for (int i = 0; i < message.nRemovedTags; i++)
+      {
+         MyStrCopy(message.RemovedTags[i], astrRemovedTags[i].c_str(), 128);
       }
 
-#ifdef USE_PTHREADS
-      pthread_mutex_lock(&m_mutexResponse);
-#else
-      m_mutexResponse.lock();
-#endif
-      m_apResponses.push_back(pResponse);
-#ifdef USE_PTHREADS
-      pthread_mutex_unlock(&m_mutexResponse);
-#else
-      m_mutexResponse.unlock();
-#endif
+      for (int i = 0; i < m_aListenCallbacks.size(); i++)
+      {
+         m_aListenCallbacks[i].cb(message, m_aListenCallbacks[i].pUserData);
+      }
+
+      delete pResponse;
    }
 }
 

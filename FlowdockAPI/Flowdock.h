@@ -48,15 +48,10 @@ public:
    bool StartListening(const std::string& strUserName, const std::string& strPassword);
    bool StartListening();
 
-   int GetListenMessagesCount() const;
-   int GetListenMessageType(int nIndex) const;
-   std::string GetListenMessageContent(int nIndex) const;
-   int GetListenMessageUser(int nIndex) const;
-   std::string GetListenMessageFlow(int nIndex) const;
-   int GetListenMessageID(int nIndex) const;
-   bool RemoveListenMessage(int nIndex);
+   bool AddListenCallback(FlowMessageCallback cb, void* pData);
 
    bool GetNicknameForUser(int nUser, std::string& strNickname) const;
+   bool GetEmailForUser(int nUser, std::string& strEMailAddress) const;
    bool GetFlowNameByID(const std::string& strID, std::string& strFlowname) const;
 
 protected:
@@ -90,12 +85,12 @@ protected:
    };
    std::vector<OrgFlowPair> m_aListenOrgFlows;
 
-#ifdef USE_PTHREADS
-   mutable pthread_mutex_t m_mutexResponse;
-#else
-   mutable std::mutex m_mutexResponse;
-#endif
-   std::vector<ListenResponse*> m_apResponses;
+   struct MessageCallbackAndDataPair
+   {
+      FlowMessageCallback cb;
+      void* pUserData;
+   };
+   std::vector<MessageCallbackAndDataPair> m_aListenCallbacks;
 
    std::vector<User*> m_apUsers;
    std::vector<Flow*> m_apFlows;

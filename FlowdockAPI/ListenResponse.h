@@ -4,41 +4,41 @@
 #include <string>
 #include <vector>
 #include <ctime>//Maybe time.h
-
-enum ListenEvent
-{
-   Message,
-   Comment,//These are the thread response messages
-   Activity_User,
-   Tag_Change
-};
+#include "FlowdockAPI.h"
 
 class ListenResponse
 {
 public:
    static ListenResponse* Create(const std::string& strMessage);
 
-   ListenEvent GetEvent() const;
+   EventType GetEvent() const;
    std::string GetContent() const;
    int GetUser() const;
    std::string GetFlow() const;
+   std::string GetThreadId() const;
    int GetMessageID() const;
+   bool IsAdding() const;
+   std::vector<std::string> GetAddedTags() const;
+   std::vector<std::string> GetRemovedTags() const;
 
 protected:
-   ListenResponse(ListenEvent eEvent, const std::vector<std::string>& astrTags, const std::string& strUUID, double dID,
-                  const std::string& strFlow, const std::string& strContent, time_t timeSent, const std::string& strApp,
+   ListenResponse(EventType eEvent, const std::string& strThreadId, const std::vector<std::string>& astrAddTags, const std::vector<std::string>& astrRemovedTags, const std::string& strUUID, int nID,
+                  const std::string& strFlow, const std::string& strContent, time_t timeSent, const std::string& strApp, bool bAdded,
                   const std::vector<std::string>& astrAttachments, int nUser);
 
 protected:
-   ListenEvent m_eEvent;
-   std::vector<std::string> m_astrTags;
+   EventType m_eEvent;
+   std::string m_strThreadId;
+   std::vector<std::string> m_astrAddedTags;
+   std::vector<std::string> m_astrRemovedTags;
    std::string m_strUUID;
    bool m_bPersist;
-   double m_dID;
+   int m_nID;
    std::string m_strFlow;
    std::string m_strContent;//Could be vector?
    time_t m_timeSent;
    std::string m_strApp;
+   bool m_bAdded;
    std::vector<std::string> m_astrAttachments;
    int m_nUser;
 };

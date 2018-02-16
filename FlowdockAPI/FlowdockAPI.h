@@ -7,6 +7,34 @@
 #define FLOWDOCK_EXTERN extern "C"
 #endif
 
+enum EventType
+{
+   Message,
+   MessageEdit,
+   Comment,//These are the thread response messages
+   Activity_User,
+   Tag_Change,
+   Message_Delete,
+   Thread_Change,
+   Emoji_Reaction
+};
+
+typedef struct
+{
+   EventType eEvent;
+   char Message[512];
+   char AddedTags[128][5];
+   char RemovedTags[128][5];
+   int nAddedTags;
+   int nRemovedTags;
+   bool bAdded;
+   int nUserId;
+   int nThreadId;
+   int nMessageId;
+} FlowdockMessage;
+
+typedef void(*FlowMessageCallback)(FlowdockMessage message, void* pUserData);
+
 typedef void*	FlowdockAPI;
 
 typedef int (*FlowdockCreateFunc)(FlowdockAPI* api, int nVerbose);
@@ -34,15 +62,10 @@ typedef int (*FlowdockRemoveListenFlowFunc)(FlowdockAPI api, const char* pstrOrg
 typedef int (*FlowdockStartListeningFunc)(FlowdockAPI api, const char* pstrUsername, const char* pstrPassword);
 typedef int (*FlowdockStartListeningDefaultsFunc)(FlowdockAPI api);
 
-typedef int (*FlowdockGetListenMessageCountFunc)(FlowdockAPI api);
-typedef int (*FlowdockGetListenMessageTypeFunc)(FlowdockAPI api, int nIndex);
-typedef int (*FlowdockGetMessageContentFunc)(FlowdockAPI api, int nIndex, char* pstrMessage, int& nSizeOfMessage);
-typedef int (*FlowdockGetMessageUserFunc)(FlowdockAPI api, int nIndex, int& nMessageUser);
-typedef int (*FlowdockGetMessageFlowFunc)(FlowdockAPI api, int nIndex, char* pstrMessageFlow, int& nSizeOfMessageFlow);
-typedef int (*FlowdockGetMessageIDFunc)(FlowdockAPI api, int nIndex, int& nMessageID);
-typedef int (*FlowdockRemoveListenMessageFunc)(FlowdockAPI api, int nIndex);//Hopefully nIndex is 0 or you are aware of threading issues
+typedef int (*FlowdockAddListenCallbackFunc)(FlowdockAPI api, FlowMessageCallback cb, void* pUserData);
 
 typedef int (*FlowdockGetNicknameForUserFunc)(FlowdockAPI api, int nUser, char* pstrNickname, int& nSizeOfNickname);
+typedef int (*FlowdockGetEMailForUserFunc)(FlowdockAPI api, int nUser, char* pstrEmailAddress, int& nSizeOfEMailAddress);
 
 typedef int (*FlowdockGetFlowByIDFunc)(FlowdockAPI api, char* pstrID, char* pstrFlowName, int& nSizeOfFlowName);
 
@@ -71,15 +94,10 @@ FLOWDOCK_EXTERN int FlowdockRemoveListenFlow(FlowdockAPI api, const char* pstrOr
 FLOWDOCK_EXTERN int FlowdockStartListening(FlowdockAPI api, const char* pstrUsername, const char* pstrPassword);
 FLOWDOCK_EXTERN int FlowdockStartListeningDefaults(FlowdockAPI api);
 
-FLOWDOCK_EXTERN int FlowdockGetListenMessageCount(FlowdockAPI api);
-FLOWDOCK_EXTERN int FlowdockGetListenMessageType(FlowdockAPI api, int nIndex);
-FLOWDOCK_EXTERN int FlowdockGetMessageContent(FlowdockAPI api, int nIndex, char* pstrMessage, int& nSizeOfMessage);
-FLOWDOCK_EXTERN int FlowdockGetMessageUser(FlowdockAPI api, int nIndex, int& nMessageUser);
-FLOWDOCK_EXTERN int FlowdockGetMessageFlow(FlowdockAPI api, int nIndex, char* pstrMessageFlow, int& nSizeOfMessageFlow);
-FLOWDOCK_EXTERN int FlowdockGetMessageID(FlowdockAPI api, int nIndex, int& nMessageID);
-FLOWDOCK_EXTERN int FlowdockRemoveListenMessage(FlowdockAPI api, int nIndex);//Hopefully nIndex is 0 or you are aware of threading issues
+FLOWDOCK_EXTERN int FlowdockAddListenCallback(FlowdockAPI api, FlowMessageCallback cb, void* pData);
 
 FLOWDOCK_EXTERN int FlowdockGetNicknameForUser(FlowdockAPI api, int nUser, char* pstrNickname, int& nSizeOfNickname);
+FLOWDOCK_EXTERN int FlowdockGetEMailForUser(FlowdockAPI api, int nUser, char* pstrEmailAddress, int& nSizeOfEMailAddress);
 
 FLOWDOCK_EXTERN int FlowdockGetFlowByID(FlowdockAPI api, char* pstrID, char* pstrFlowName, int& nSizeOfFlowName);
 
