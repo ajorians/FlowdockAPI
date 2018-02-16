@@ -16,7 +16,7 @@
 
 using namespace std;
 
-void Listen_Callback(FlowMessage message, void* pUserData)
+void Listen_Callback(FlowdockMessage message, void* pUserData)
 {
 
 }

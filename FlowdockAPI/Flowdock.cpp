@@ -202,7 +202,7 @@ FLOWDOCK_EXTERN int FlowdockGetNicknameForUser(FlowdockAPI api, int nUser, char*
    }
    else
    {
-      nSizeOfNickname = strNickname.size();
+      nSizeOfNickname = (int)strNickname.size();
    }
 
    return strNickname.size()>0 ? 1 : 0;
@@ -221,7 +221,7 @@ FLOWDOCK_EXTERN int FlowdockGetEMailForUser(FlowdockAPI api, int nUser, char* ps
    }
    else
    {
-      nSizeOfEMailAddress = strEMail.size();
+      nSizeOfEMailAddress = (int)strEMail.size();
    }
 
    return strEMail.size()>0 ? 1 : 0;
@@ -241,7 +241,7 @@ FLOWDOCK_EXTERN int FlowdockGetFlowByID(FlowdockAPI api, char* pstrID, char* pst
    }
    else
    {
-      nSizeOfFlowName = strFlowName.size();
+      nSizeOfFlowName = (int)strFlowName.size();
    }
 
    return strFlowName.size()>0 ? 1 : 0;
@@ -856,15 +856,34 @@ void Flowdock::ReceivedResponse(const std::string& strListenResponse)
    {
       cout << "Received response: " << strListenResponse << endl;
    }
+
+   if (strListenResponse == "\n\r\n")
+      return;
+
    ListenResponse* pResponse = ListenResponse::Create(strListenResponse);
 
    if (pResponse != NULL)
    {
-      FlowMessage message;
+      FlowdockMessage message;
       message.eEvent = pResponse->GetEvent();
-      strcpy(message.Message, pResponse->GetContent().c_str());
+      MyStrCopy(message.Message, pResponse->GetContent().c_str(), sizeof(message.Message));
       message.nUserId = pResponse->GetUser();
-      message.nThreadId = pResponse->GetMessageID();
+      message.nThreadId = -1;
+      message.nMessageId = pResponse->GetMessageID();
+
+      message.bAdded = pResponse->IsAdding();
+      std::vector<std::string> astrAddedTags = pResponse->GetAddedTags();
+      std::vector<std::string> astrRemovedTags = pResponse->GetRemovedTags();
+      message.nAddedTags = (int)astrAddedTags.size();
+      message.nRemovedTags = (int)astrRemovedTags.size();
+      for (int i = 0; i < message.nAddedTags; i++)
+      {
+         MyStrCopy(message.AddedTags[i], astrAddedTags[i].c_str(), 128);
+      }
+      for (int i = 0; i < message.nRemovedTags; i++)
+      {
+         MyStrCopy(message.RemovedTags[i], astrRemovedTags[i].c_str(), 128);
+      }
 
       for (int i = 0; i < m_aListenCallbacks.size(); i++)
       {

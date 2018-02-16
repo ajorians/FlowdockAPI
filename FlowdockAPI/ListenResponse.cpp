@@ -7,18 +7,20 @@
 
 using namespace std;
 
-ListenResponse::ListenResponse(EventType eEvent, const std::string& strThreadId, const std::vector<std::string>& astrTags, const std::string& strUUID, int nID,
-                  const std::string& strFlow, const std::string& strContent, time_t timeSent, const std::string& strApp,
+ListenResponse::ListenResponse(EventType eEvent, const std::string& strThreadId, const std::vector<std::string>& astrAddTags, const std::vector<std::string>& astrRemovedTags, const std::string& strUUID, int nID,
+                  const std::string& strFlow, const std::string& strContent, time_t timeSent, const std::string& strApp, bool bAdded,
                   const std::vector<std::string>& astrAttachments, int nUser)
 : m_eEvent(eEvent),
 m_strThreadId( strThreadId ),
-m_astrTags(astrTags),
+m_astrAddedTags(astrAddTags),
+m_astrRemovedTags(astrRemovedTags),
 m_strUUID(strUUID),
 m_nID(nID),
 m_strFlow(strFlow),
 m_strContent(strContent),
 m_timeSent(timeSent),
 m_strApp(strApp),
+m_bAdded( bAdded ),
 m_astrAttachments(astrAttachments),
 m_nUser(nUser)
 {
@@ -59,6 +61,8 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
       eEvent = Message_Delete;
    else if( strEvent == "thread-change" )
       eEvent = Thread_Change;
+   else if( strEvent == "emoji-reaction" )
+      eEvent = Emoji_Reaction;
 
    //Tags
    if( root.find("tags") == root.end() || !root["tags"]->IsArray() )
@@ -85,7 +89,6 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
       return NULL;
 
    int nID = (int)root["id"]->AsNumber();
-
    if( eEvent == Comment && astrTags.size() > 0 )
    {
       for(unsigned int i=0; i<astrTags.size(); i++)
@@ -113,6 +116,9 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
    //Looks like content is an array showing last activity when somebody is typing
    //And a string when somebody wrote something
    std::string strContent;
+   bool bAdded = false;
+   std::vector<std::string> arrAddedTags;
+   std::vector<std::string> arrRemovedTags;
    if( eEvent != Comment && root.find("content") != root.end() && root["content"]->IsString() ) {
       strContent = root["content"]->AsString();
    }
@@ -125,9 +131,27 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
    else if ( eEvent == Tag_Change && root.find( "content" ) != root.end() && root["content"]->IsObject() )
    {
       JSON* pContent = root["content"];
-      if ( pContent->HasChild( "message" ) && pContent->Child( "message" )->AsNumber() )
+      if ( pContent->HasChild( "message" ) && pContent->Child( "message" )->IsNumber() )
       {
-         nID = pContent->Child( "message" )->AsNumber();
+         nID = (int)pContent->Child( "message" )->AsNumber();
+      }
+      if (pContent->HasChild("add") && pContent->Child("add")->IsArray())
+      {
+         JSONArray addedTags = pContent->Child("add")->AsArray();
+         for (int i = 0; i < addedTags.size(); i++)
+         {
+            std::string strAddedTag = addedTags[i]->AsString();
+            arrAddedTags.push_back(strAddedTag);
+         }
+      }
+      if (pContent->HasChild("remove") && pContent->Child("remove")->IsArray())
+      {
+         JSONArray removedTags = pContent->Child("remove")->AsArray();
+         for (int i = 0; i < removedTags.size(); i++)
+         {
+            std::string strRemovedTag = removedTags[i]->AsString();
+            arrRemovedTags.push_back(strRemovedTag);
+         }
       }
    }
    else if (eEvent == MessageEdit && root.find("content") != root.end() && root["content"]->IsObject())
@@ -135,12 +159,30 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
       JSON* pContent = root["content"];
       if (pContent->HasChild("message") && pContent->Child("message")->IsNumber())
       {
-         nID = pContent->Child("message")->AsNumber();
+         nID = (int)pContent->Child("message")->AsNumber();
       }
       if (pContent->HasChild("updated_content") && pContent->Child("updated_content")->IsString())
       {
          strContent = pContent->Child("updated_content")->AsString();
       }
+   }
+   else if (eEvent == Emoji_Reaction && root.find("content") != root.end() && root["content"]->IsObject())
+   {
+      JSON* pContent = root["content"];
+
+      std::string strEmoji;
+      if (pContent->HasChild("emoji") && pContent->Child("emoji")->IsString())
+      {
+         strEmoji = pContent->Child("emoji")->AsString();
+      }
+
+      if (pContent->HasChild("type") && pContent->Child("type")->IsString())
+      {
+         std::string strType = pContent->Child("type")->AsString();
+         bAdded = strType == "add";
+      }
+
+      strContent = strEmoji;
    }
 
    //Sent
@@ -150,7 +192,7 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
    double dSent = root["sent"]->AsNumber();
 
    double dSecondsSinceEpoch = dSent/1000;
-   time_t timeSent = dSecondsSinceEpoch;
+   time_t timeSent = (time_t)dSecondsSinceEpoch;
 
    //App
    std::string strApp;
@@ -212,13 +254,15 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
    ListenResponse* pResponse = new ListenResponse(
       eEvent,
       strThreadId,
-      astrTags,
+      arrAddedTags,
+      arrRemovedTags,
       strUUID,
       nID,
       strFlow,
       strContent,
       timeSent,
       strApp,
+      bAdded,
       std::vector<std::string>(),//Attachments
       nUser);
 
@@ -245,7 +289,27 @@ std::string ListenResponse::GetFlow() const
    return m_strFlow;
 }
 
+std::string ListenResponse::GetThreadId() const
+{
+   return m_strThreadId;
+}
+
 int ListenResponse::GetMessageID() const
 {
    return m_nID;
+}
+
+bool ListenResponse::IsAdding() const
+{
+   return m_bAdded;
+}
+
+std::vector<std::string> ListenResponse::GetAddedTags() const
+{
+   return m_astrAddedTags;
+}
+
+std::vector<std::string> ListenResponse::GetRemovedTags() const
+{
+   return m_astrRemovedTags;
 }

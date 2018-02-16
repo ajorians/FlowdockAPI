@@ -15,18 +15,25 @@ enum EventType
    Activity_User,
    Tag_Change,
    Message_Delete,
-   Thread_Change
+   Thread_Change,
+   Emoji_Reaction
 };
 
 typedef struct
 {
    EventType eEvent;
    char Message[512];
+   char AddedTags[128][5];
+   char RemovedTags[128][5];
+   int nAddedTags;
+   int nRemovedTags;
+   bool bAdded;
    int nUserId;
    int nThreadId;
-} FlowMessage;
+   int nMessageId;
+} FlowdockMessage;
 
-typedef void(*FlowMessageCallback)(FlowMessage message, void* pUserData);
+typedef void(*FlowMessageCallback)(FlowdockMessage message, void* pUserData);
 
 typedef void*	FlowdockAPI;
 
