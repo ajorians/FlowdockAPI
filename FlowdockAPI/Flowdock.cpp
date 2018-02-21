@@ -739,7 +739,8 @@ size_t Flowdock::listen_callback(void *ptr, size_t size, size_t nmemb, void *use
       return 0;
 
    const char* pstr = reinterpret_cast<char*>(ptr);
-   pThis->ReceivedResponse(pstr);
+   std::string strData(pstr, nmemb);
+   pThis->ReceivedResponse(strData);
 
    return size * nmemb;
 }

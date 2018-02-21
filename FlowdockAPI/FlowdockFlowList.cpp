@@ -56,7 +56,8 @@ size_t FlowdockFlowList::flowList_callback(void *ptr, size_t size, size_t nmemb,
    FlowdockFlowList* pThis = (FlowdockFlowList*)userdata;
 
    const char* pstr = reinterpret_cast<char*>(ptr);
-   pThis->m_strData.append(pstr);
+   std::string strData(pstr, nmemb);
+   pThis->m_strData.append(strData);
 
    return size * nmemb;
 }

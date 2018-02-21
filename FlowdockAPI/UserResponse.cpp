@@ -7,7 +7,7 @@ using namespace std;
 
 bool UserResponse::Parse(const std::string& strMessage, std::vector<User*>& arrpUsers)
 {
-   JSON *value = JSON::Parse(strMessage.c_str());
+   JSON *value = JSON::Parse(strMessage);
    if( value == NULL )
    {
       cout << "Value is null" << endl;
