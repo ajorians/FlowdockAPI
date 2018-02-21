@@ -1,6 +1,7 @@
 #include "Utils.h"
 #include <sstream>
 #include <cstring>
+#include <string.h>
 
 std::string IntToString(int nValue)
 {

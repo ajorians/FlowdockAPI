@@ -247,7 +247,7 @@ ListenResponse* ListenResponse::Create(const std::string& strMessage)
       return NULL;
 
    std::string strUser = root["user"]->AsString();
-   int nUser = std::stoi(strUser);
+   int nUser = atoi(strUser.c_str());
 
    delete(value);
 
