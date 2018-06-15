@@ -1,6 +1,6 @@
 PROJECT (FlowdockAPI)
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.1)
 
 # This is in case we ever need to know if we were creating a VS or Xcode project
 IF(CMAKE_GENERATOR MATCHES "Visual Studio 8")
@@ -15,6 +15,8 @@ IF(WIN32)
 ENDIF(WIN32)
 
 ADD_DEFINITIONS(-DCURL_STATICLIB)
+
+SET(CMAKE_CXX_STANDARD 11)
 
 FILE(GLOB HEADERS *.h)
 FILE(GLOB SOURCE_FILES *.cpp)
