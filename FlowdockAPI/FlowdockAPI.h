@@ -22,7 +22,7 @@ enum EventType
 typedef struct
 {
    EventType eEvent;
-   char Message[512];
+   char Message[5000];
    char AddedTags[128][5];
    char RemovedTags[128][5];
    int nAddedTags;
@@ -45,6 +45,8 @@ typedef int (*FlowdockSetUsernamePasswordFunc)(FlowdockAPI api, const char* pstr
 typedef int (*FlowdockSayFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName);
 typedef int (*FlowdockSayOrgFlowMessageFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName);
 typedef int (*FlowdockSayDefaultsFunc)(FlowdockAPI api, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName);
+
+typedef int (*FlowdockAddEmojiReactionFunc)(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, int nMessageID, const char* pstrEmojiReaction );
 
 typedef int( *FlowdockTagFunc )( FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, int nCommentTo, const char* pstrTags );
 
@@ -77,6 +79,8 @@ FLOWDOCK_EXTERN int FlowdockSetUsernamePassword(FlowdockAPI api, const char* pst
 FLOWDOCK_EXTERN int FlowdockSay(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName);
 FLOWDOCK_EXTERN int FlowdockSayOrgFlowMessage(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName);
 FLOWDOCK_EXTERN int FlowdockSayDefaults(FlowdockAPI api, const char* pstrMessage, int nCommentTo, const char* pstrTags, const char* pstrExternalUserName);
+
+FLOWDOCK_EXTERN int FlowdockAddEmojiReaction(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, int nMessageID, const char* pstrEmojiReaction );
 
 FLOWDOCK_EXTERN int FlowdockTag( FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, int nCommentTo, const char* pstrTags );
 

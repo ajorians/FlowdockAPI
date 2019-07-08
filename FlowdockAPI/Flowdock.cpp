@@ -96,6 +96,20 @@ FLOWDOCK_EXTERN int FlowdockSayDefaults(FlowdockAPI api, const char* pstrMessage
    return pFlowdock->Say(strMessage, nCommentTo, strTags, strExternalUsername) ? 1 : 0;
 }
 
+FLOWDOCK_EXTERN int FlowdockAddEmojiReaction(FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, int nMessageID, const char* pstrEmojiReaction )
+{
+    std::string strOrg(pstrOrg), strFlow(pstrFlow), strUsername(pstrUsername), strPassword(pstrPassword), strEmojiReaction(pstrEmojiReaction);
+    Flowdock* pFlowdock = (Flowdock*)api;
+    return pFlowdock->AddEmojiReaction(strOrg, strFlow, strUsername, strPassword, nMessageID, strEmojiReaction);
+}
+
+FLOWDOCK_EXTERN int FlowdockAddEmojiReactionDefaults(FlowdockAPI api, int nMessageID, const char* pstrEmojiReaction )
+{
+    std::string strEmojiReaction(pstrEmojiReaction);
+    Flowdock* pFlowdock = (Flowdock*)api;
+    return pFlowdock->AddEmojiReaction(nMessageID, strEmojiReaction);
+}
+
 FLOWDOCK_EXTERN int FlowdockTag( FlowdockAPI api, const char* pstrOrg, const char* pstrFlow, const char* pstrUsername, const char* pstrPassword, int nCommentTo, const char* pstrTags )
 {
    std::string strOrg( pstrOrg ), strFlow( pstrFlow ), strUsername( pstrUsername ), strPassword( pstrPassword );
@@ -414,6 +428,73 @@ bool Flowdock::Say(const std::string& strMessage, int nCommentTo,
    if( m_strDefaultOrg.empty() || m_strDefaultFlow.empty() ||m_strDefaultUsername.empty() || m_strDefaultPassword.empty() )
       return false;
    return Say(m_strDefaultOrg, m_strDefaultFlow, m_strDefaultUsername, m_strListenPassword, strMessage, nCommentTo, strTagsCommaSeparated, strExternalName);
+}
+
+bool Flowdock::AddEmojiReaction(const std::string& strOrg, const std::string& strFlow, const std::string& strUserName, const std::string& strPassword, int nMessageID, const std::string& strEmojiReaction )
+{
+    CURL *curl;
+    CURLcode res;
+
+    std::string strURL = "https://api.flowdock.com/flows/";
+    strURL += strOrg;
+    strURL += "/";
+    strURL += strFlow;
+    strURL += "/messages";
+    strURL += "/" + IntToString( nMessageID );
+    strURL += "/emoji_reaction";
+
+    curl = curl_easy_init();
+    if ( !curl )
+        return false;
+
+    curl_easy_setopt( curl, CURLOPT_URL, strURL.c_str() );
+
+    std::string ctype_header = "Content-Type: application/json";
+
+    JSONObjects objs;
+    objs["type"] = new JSON("add");
+    objs["emoji"] = new JSON(strEmojiReaction.c_str());
+
+    JSON json( objs );
+
+    std::string data = json.Stringify();
+
+    curl_easy_setopt( curl, CURLOPT_USERAGENT, "ajclient/0.0.1" );
+    curl_easy_setopt( curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC );
+    std::string strUserPass = strUserName + ":" + strPassword;
+    curl_easy_setopt( curl, CURLOPT_USERPWD, strUserPass.c_str() );
+#ifdef CURL_VERBOSE_OUTPUT
+    curl_easy_setopt( curl, CURLOPT_VERBOSE, 1L );
+#endif
+
+    curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0L );
+    curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 0L );
+
+    curl_easy_setopt( curl, CURLOPT_POST, 1L );
+    curl_easy_setopt( curl, CURLOPT_POSTFIELDS, data.c_str() );
+    curl_easy_setopt( curl, CURLOPT_POSTFIELDSIZE, data.size() );
+
+    curl_slist* header = NULL;
+    header = curl_slist_append( header, ctype_header.c_str() );
+    curl_easy_setopt( curl, CURLOPT_HTTPHEADER, header );
+    curl_easy_setopt( curl, CURLOPT_CUSTOMREQUEST, "POST" );
+
+    res = curl_easy_perform( curl );
+
+    long http_code = 0;
+    curl_easy_getinfo( curl, CURLINFO_RESPONSE_CODE, &http_code );
+
+    curl_easy_cleanup( curl );
+
+    return static_cast<int>( http_code ) == 200;
+}
+
+bool Flowdock::AddEmojiReaction(int nMessageID, const std::string& strEmojiReaction )
+{
+    assert( !m_strDefaultOrg.empty() && !m_strDefaultFlow.empty() && !m_strDefaultUsername.empty() && !m_strDefaultPassword.empty());
+    if( m_strDefaultOrg.empty() || m_strDefaultFlow.empty() ||m_strDefaultUsername.empty() || m_strDefaultPassword.empty() )
+        return false;
+    return AddEmojiReaction(m_strDefaultOrg, m_strDefaultFlow, m_strDefaultUsername, m_strListenPassword, nMessageID, strEmojiReaction);
 }
 
 bool Flowdock::Tag( const std::string& strOrg, const std::string& strFlow, const std::string& strUserName, const std::string& strPassword, int nCommentTo, const std::vector<std::string>& arrstrTags )
